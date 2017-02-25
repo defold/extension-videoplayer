@@ -18,7 +18,6 @@ function init(self)
     end
 end
 
-
 function update(self, dt)
     if videoplayer ~= nil then
         videoplayer.update(self.video, dt)

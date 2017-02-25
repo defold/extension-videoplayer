@@ -39,7 +39,7 @@ struct Movie
     int                 m_Corrupted;
 };
 
-static uint64_t g_VideoBufferStreamName = dmHashString64("pixels");
+static uint64_t g_VideoBufferStreamName = dmHashString64("rgb");
 
 
 static int Open(lua_State* L)
