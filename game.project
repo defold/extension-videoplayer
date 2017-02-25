@@ -1,6 +1,7 @@
 [project]
-title = My project
+title = VideoPlayer
 version = 0.1
+custom_resources = videos
 
 [bootstrap]
 main_collection = /main/main.collectionc
@@ -9,12 +10,24 @@ main_collection = /main/main.collectionc
 game_binding = /input/game.input_bindingc
 
 [display]
-width = 1280
-height = 720
+width = 800
+height = 600
 
 [physics]
 scale = 0.02
 
 [script]
 shared_state = 1
+
+[ios]
+bundle_identifier = com.defoldexample.videoplayer
+
+[android]
+package = com.defoldexample.videoplayer
+
+[osx]
+bundle_identifier = com.defoldexample.videoplayer
+
+[library]
+include_dirs = videoplayer
 
