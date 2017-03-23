@@ -46,7 +46,7 @@ static int Open(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 1);
 
-    dmBuffer::HBuffer* sourcebuffer = dmScript::CheckBuffer(L, 1);
+    dmScript::LuaHBuffer* sourcebuffer = dmScript::CheckBuffer(L, 1);
 
     Movie* movie = new Movie;
     memset(movie, 0, sizeof(*movie));
@@ -54,7 +54,7 @@ static int Open(lua_State* L)
     {
         uint8_t* data = 0;
         uint32_t datasize = 0;
-        dmBuffer::GetBytes(*sourcebuffer, (void**)&data, &datasize);
+        dmBuffer::GetBytes(sourcebuffer->m_Buffer, (void**)&data, &datasize);
 
         movie->m_VpxCtx.length = datasize;
         movie->m_VpxCtx.buffer = (uint8_t*)malloc(datasize);
@@ -95,7 +95,7 @@ static int Open(lua_State* L)
         {g_VideoBufferStreamName, dmBuffer::VALUE_TYPE_UINT8, 3}
     };
 
-    dmBuffer::Allocate(size, streams_decl, 1, &movie->m_VideoBuffer);
+    dmBuffer::Create(size, streams_decl, 1, &movie->m_VideoBuffer);
 
     // Reset texture to 0
     uint8_t* data = 0;
@@ -104,7 +104,8 @@ static int Open(lua_State* L)
     memset(data, 0, datasize);
 
     // Increase ref count
-    dmScript::PushBuffer(L, movie->m_VideoBuffer);
+    dmScript::LuaHBuffer buffer = {movie->m_VideoBuffer, false};
+    dmScript::PushBuffer(L, buffer);
     movie->m_VideoBufferLuaRef = dmScript::Ref(L, LUA_REGISTRYINDEX);
 
     lua_pushnumber(L, (uintptr_t)movie);
@@ -198,12 +199,11 @@ static int Update(lua_State* L)
     }
 
     uint8_t* out_stream = 0x0;
-    uint32_t out_stride = 0;
-    uint32_t out_element_count = 0;
-    dmBuffer::Result r = dmBuffer::GetStream(movie->m_VideoBuffer, g_VideoBufferStreamName, dmBuffer::VALUE_TYPE_UINT8, s_BytesPerPixel, (void**)&out_stream, &out_stride, &out_element_count);
+    uint32_t out_size = 0x0;
+    dmBuffer::Result r = dmBuffer::GetStream(movie->m_VideoBuffer, g_VideoBufferStreamName, (void**)&out_stream, &out_size);
     if( r != dmBuffer::RESULT_OK )
     {
-        printf("Video stream was not gotten properly: %d", (int)r);
+        printf("Video stream was not retrieved properly: %d", (int)r);
         lua_pushnil(L);
         return 1;
     }
@@ -245,7 +245,7 @@ static int Update(lua_State* L)
         return 0;
     }
 
-    ConvertYV12toRGB(img, out_element_count*s_BytesPerPixel, (uint8_t*)out_stream);
+    ConvertYV12toRGB(img, out_size, (uint8_t*)out_stream);
 
     dmBuffer::ValidateBuffer(movie->m_VideoBuffer);
 
