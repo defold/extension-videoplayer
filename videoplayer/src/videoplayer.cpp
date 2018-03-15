@@ -200,7 +200,9 @@ static int Update(lua_State* L)
 
     uint8_t* out_stream = 0x0;
     uint32_t out_size = 0x0;
-    dmBuffer::Result r = dmBuffer::GetStream(movie->m_VideoBuffer, g_VideoBufferStreamName, (void**)&out_stream, &out_size);
+    uint32_t out_num_components = 0x0;
+    uint32_t out_stride = 0x0;
+    dmBuffer::Result r = dmBuffer::GetStream(movie->m_VideoBuffer, g_VideoBufferStreamName, (void**)&out_stream, &out_size, &out_num_components, &out_stride);
     if( r != dmBuffer::RESULT_OK )
     {
         printf("Video stream was not retrieved properly: %d", (int)r);
@@ -245,7 +247,8 @@ static int Update(lua_State* L)
         return 0;
     }
 
-    ConvertYV12toRGB(img, out_size, (uint8_t*)out_stream);
+    // component size is 1
+    ConvertYV12toRGB(img, out_size * out_stride, (uint8_t*)out_stream);
 
     dmBuffer::ValidateBuffer(movie->m_VideoBuffer);
 
