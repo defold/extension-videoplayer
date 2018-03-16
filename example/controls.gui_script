@@ -1,0 +1,61 @@
+local function select(node)
+	-- deselect all
+	local color = vmath.vector4(1, 1, 1, 0.5)
+	gui.set_color(gui.get_node("play_pause"), color)
+	gui.set_color(gui.get_node("fastforward"), color)
+	gui.set_color(gui.get_node("stop"), color)
+	-- select node
+	gui.set_color(node, vmath.vector4(1))
+end
+
+local function post_to_player(message_id, message)
+	msg.post("#script", message_id, message or {})
+end
+
+local function update_playback(self)
+	gui.set_text(gui.get_node("speed"), "x" .. tostring(self.playback_speed))
+	gui.set_enabled(gui.get_node("speed"), self.playback_speed > 1)
+	gui.play_flipbook(gui.get_node("play_pause"), self.playback_speed == 1 and hash("pause") or hash("forward"))
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.playback_speed = 1
+	update_playback(self)
+	select(gui.get_node("play_pause"))
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.released then
+		if gui.pick_node(gui.get_node("play_pause"), action.x, action.y) then
+			self.playback_speed = (self.playback_speed == 1) and 0 or 1
+			update_playback(self)
+			post_to_player((self.playback_speed == 0) and "pause" or "play")
+			select(gui.get_node("play_pause"))
+		elseif gui.pick_node(gui.get_node("fastforward"), action.x, action.y) then
+			-- from stopped/paused to fast forward
+			if self.playback_speed == 0 then
+				self.playback_speed = 2
+			-- change fast forward speed
+			else
+				self.playback_speed = self.playback_speed * 2
+				if self.playback_speed > 32 then
+					self.playback_speed = 2
+				end
+			end
+			update_playback(self)
+			post_to_player("fastforward", { playback_speed = self.playback_speed })
+			select(gui.get_node("fastforward"))
+		elseif gui.pick_node(gui.get_node("stop"), action.x, action.y) then
+			self.playback_speed = 0
+			update_playback(self)
+			post_to_player("stop")
+			select(gui.get_node("stop"))
+		end
+	end
+end
+
+function on_reload(self)
+	-- Add input-handling code here
+	-- Remove this function if not needed
+end

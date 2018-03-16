@@ -1,0 +1,27 @@
+images {
+  image: "/example/images/fastForward.png"
+}
+images {
+  image: "/example/images/forward.png"
+}
+images {
+  image: "/example/images/next.png"
+}
+images {
+  image: "/example/images/pause.png"
+}
+images {
+  image: "/example/images/previous.png"
+}
+images {
+  image: "/example/images/rewind.png"
+}
+images {
+  image: "/example/images/stop.png"
+}
+images {
+  image: "/example/images/black1px.png"
+}
+margin: 0
+extrude_borders: 1
+inner_padding: 0
