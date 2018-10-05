@@ -1,7 +1,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#if !defined(WIN32)
 #include <unistd.h>
+#endif
 
 #define LIB_NAME "VideoPlayer"
 #define MODULE_NAME "videoplayer"
@@ -68,7 +70,7 @@ static int Open(lua_State* L)
     }
     movie->m_Type = MOVIE_TYPE_WEBM;
 
-    if( movie->m_Type == MOVIE_TYPE_WEBM) 
+    if( movie->m_Type == MOVIE_TYPE_WEBM)
     {
         if (webm_guess_framerate(&movie->m_WebmCtx, &movie->m_VpxCtx))
         {
@@ -175,8 +177,8 @@ static int Update(lua_State* L)
     assert(movie != 0);
 
     float dt = (float) luaL_checknumber(L, 2);
-    
-    if( movie->m_Corrupted ) 
+
+    if( movie->m_Corrupted )
     {
         return 0;
     }

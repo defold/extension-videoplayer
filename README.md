@@ -9,7 +9,11 @@ Please regard it as just that, an example, and don't rely on this as a dependenc
 
 # Known issues
 
-The currently supported platforms are: OSX, iOS, Android
+The currently unsupported platforms are: Windows
+
+# How to build the libraries
+
+[Instructions here](videoplayer/utils/README.md)
 
 
 # FAQ
@@ -30,7 +34,7 @@ Opens a video resource, and returns a handle to the instance.
 
     local videoresource = resource.load("/videos/big_buck_bunny.webm")
     self.video = videoplayer.open(videoresource)
-    
+
 ## videoplayer.get_info(video)
 
 Gets the info about the video, such as width and height
@@ -38,10 +42,10 @@ Gets the info about the video, such as width and height
 ## videoplayer.get_frame(video)
 
 Gets the video buffer. This is allocated when opening the video.
-The buffer has one stream, with signature `{hash("rgb"), buffer.VALUE_TYPE_UINT8, 3}`. 
+The buffer has one stream, with signature `{hash("rgb"), buffer.VALUE_TYPE_UINT8, 3}`.
 
     self.videoframe = videoplayer.get_frame(self.video)
-    
+
 ## videoplayer.update(video, dt)
 
 Updates the video with a delta time
@@ -57,9 +61,9 @@ Updates the video with a delta time
         local screen_height = sys.get_config("display.height", 800)
         local scale_width = screen_width / logosize
         local scale_height = screen_height / logosize
-        
+
         go.set("#sprite", "scale", vmath.vector3(scale_width, scale_height, 1) )
-                                            
+
         if videoplayer ~= nil then
             local videoresource = resource.load("/videos/big_buck_bunny.webm")
             self.video = videoplayer.open(videoresource)
