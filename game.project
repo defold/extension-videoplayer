@@ -2,6 +2,7 @@
 title = VideoPlayer
 version = 0.1
 custom_resources = videos
+bundle_resources = /res
 
 [bootstrap]
 main_collection = /example/player.collectionc
@@ -24,6 +25,7 @@ bundle_identifier = com.defoldexample.videoplayer
 
 [android]
 package = com.defoldexample.videoplayer
+manifest = /AndroidManifest.xml
 
 [osx]
 bundle_identifier = com.defoldexample.videoplayer

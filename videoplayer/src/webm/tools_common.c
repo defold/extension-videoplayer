@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if !defined(DM_PLATFORM_ANDROID)
+
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -459,3 +461,5 @@ void vpx_img_downshift(vpx_image_t *dst, vpx_image_t *src, int down_shift) {
   }
 }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
+
+#endif // DM_PLATFORM_ANDROID

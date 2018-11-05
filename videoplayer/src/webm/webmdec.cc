@@ -1,3 +1,5 @@
+#if !defined(DM_PLATFORM_ANDROID)
+
 /*
  *  Copyright (c) 2013 The WebM project authors. All Rights Reserved.
  *
@@ -296,3 +298,5 @@ void webm_free(struct WebmInputContext *webm_ctx)
 {
   reset(webm_ctx);
 }
+
+#endif // DM_PLATFORM_ANDROID
