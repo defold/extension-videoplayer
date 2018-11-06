@@ -17,6 +17,11 @@
 #include <vpx/tools/tools_common.h> // VpxInputContext
 #include <webm/webmdec.h>           // WebmInputContext
 
+#include <libyuv/convert_from.h>
+
+// Example code
+// https://github.com/webmproject/libvpx/blob/master/examples/simple_decoder.c
+
 static const int s_BytesPerPixel = 3;
 
 
@@ -133,42 +138,6 @@ static int Close(lua_State* L)
     return 0;
 }
 
-// http://stackoverflow.com/questions/17088118/decode-from-vp8-video-frame-to-rgb
-void ConvertYV12toRGB(const vpx_image_t* img, uint32_t buffersize, uint8_t* buffer)
-{
-    uint8_t* yPlane = img->planes[VPX_PLANE_Y];
-    uint8_t* uPlane = img->planes[VPX_PLANE_U];
-    uint8_t* vPlane = img->planes[VPX_PLANE_V];
-
-    int stride = img->d_w * s_BytesPerPixel;
-    buffer = buffer + buffersize - stride;
-
-    int i = 0;
-    for (unsigned int imgY = 0; imgY < img->d_h; imgY++) {
-        for (unsigned int imgX = 0; imgX < img->d_w; imgX++) {
-            int y = yPlane[imgY * img->stride[VPX_PLANE_Y] + imgX];
-            int u = uPlane[(imgY / 2) * img->stride[VPX_PLANE_U] + (imgX / 2)];
-            int v = vPlane[(imgY / 2) * img->stride[VPX_PLANE_V] + (imgX / 2)];
-
-            int c = y - 16;
-            int d = (u - 128);
-            int e = (v - 128);
-
-            #define CLAMP(_X_) ((_X_) < 0 ? 0 : ((_X_)>255 ? 255 : (_X_)))
-
-            int r = CLAMP((298 * c           + 409 * e + 128) >> 8);
-            int g = CLAMP((298 * c - 100 * d - 208 * e + 128) >> 8);
-            int b = CLAMP((298 * c + 516 * d           + 128) >> 8);
-
-            buffer[imgX*3 + 0] = (uint8_t)r;
-            buffer[imgX*3 + 1] = (uint8_t)g;
-            buffer[imgX*3 + 2] = (uint8_t)b;
-        }
-        buffer -= stride;
-    }
-}
-
-
 static int Update(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
@@ -216,14 +185,14 @@ static int Update(lua_State* L)
     uint8_t* framebuffer = 0;
     size_t framebuffersize = 0;
 
+    vpx_image_t* last_img = 0;
     for( uint32_t i = 0; i < num_frames_tick; ++i )
     {
-        ++movie->m_Frame;
-
         if( movie->m_Type == MOVIE_TYPE_WEBM )
         {
             result = webm_read_frame(&movie->m_WebmCtx, &framebuffer, &framebuffersize);
         }
+
         if( !result )
         {
             if (vpx_codec_decode(&movie->m_Decoder, framebuffer, (unsigned int)framebuffersize, NULL, 0)) {
@@ -233,11 +202,17 @@ static int Update(lua_State* L)
                 return 0;
             }
         }
+
+        vpx_image_t* img = 0;
+        vpx_codec_iter_t iter = NULL;
+        while ((img = vpx_codec_get_frame(&movie->m_Decoder, &iter)) != NULL) {
+            last_img = img;
+            ++movie->m_Frame;
+        }
     }
 
-    vpx_codec_iter_t iter = NULL;
-    vpx_image_t* img = vpx_codec_get_frame(&movie->m_Decoder, &iter);
-    if( !img )
+    vpx_image_t* img = last_img;
+    if( !img ) // looping?
     {
         VpxRational framerate = movie->m_VpxCtx.framerate;
         webm_free(&movie->m_WebmCtx);
@@ -249,8 +224,12 @@ static int Update(lua_State* L)
         return 0;
     }
 
-    // component size is 1
-    ConvertYV12toRGB(img, out_size * out_stride, (uint8_t*)out_stream);
+    // I420ToRGB flips the R&B channels, which we don't want
+    libyuv::I420ToRAW(img->planes[VPX_PLANE_Y], img->stride[VPX_PLANE_Y],
+                      img->planes[VPX_PLANE_U], img->stride[VPX_PLANE_U],
+                      img->planes[VPX_PLANE_V], img->stride[VPX_PLANE_V],
+                      (uint8_t*)out_stream, img->d_w * 3,
+                      img->d_w, -img->d_h); // negative height flips the image
 
     dmBuffer::ValidateBuffer(movie->m_VideoBuffer);
 

@@ -25,6 +25,11 @@ function init(self)
 	select(gui.get_node("play_pause"))
 end
 
+function update(self, dt)
+	local n = gui.get_node("fps")
+	gui.set_text(n, string.format("FPS: %.2f", 1 / dt))
+end
+
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.released then
 		if gui.pick_node(gui.get_node("play_pause"), action.x, action.y) then
