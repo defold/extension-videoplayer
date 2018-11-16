@@ -26,6 +26,7 @@ bundle_identifier = com.defoldexample.videoplayer
 [android]
 package = com.defoldexample.videoplayer
 manifest = /AndroidManifest.xml
+debuggable = 1
 
 [osx]
 bundle_identifier = com.defoldexample.videoplayer

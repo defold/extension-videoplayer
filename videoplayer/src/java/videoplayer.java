@@ -11,33 +11,37 @@ class VideoplayerExtension {
         Log.v("defold-videoplayer", message);
     }
 
-    public static void Init(final Context context) {
-        LOG("VideoplayerExtension: Init()");
-        Movie.init(context);
-    }
-    public static Movie Open(final Context context, String uri, int id) {
+    // public static void Init(final Context context) {
+    //     LOG("VideoplayerExtension: Init()");
+    //     MovieSurfaceTexture.init(context);
+    // }
+
+    public static MovieSurfaceTexture Open(final Context context, String uri, int id) {
         LOG("VideoplayerExtension: Opening video");
-        Movie movie = new Movie(context, uri, id);
-        return movie;
+        return new MovieSurfaceTexture(context, uri, id);
     }
-    public static void Close(Movie movie) {
+    public static void Close(MovieSurfaceTexture movie) {
         LOG("VideoplayerExtension: Closing video");
         movie.close();
     }
-    public static void Update(float dt, Movie movie) {
+    public static void Update(MovieSurfaceTexture movie, float dt) {
         //LOG("VideoplayerExtension: Updating video " + Float.toString(dt));
         movie.update();
     }
-    public static void Start(Movie movie) {
+    public static void Start(MovieSurfaceTexture movie, int texture) {
         LOG("VideoplayerExtension: Starting video");
-        movie.start();
+        movie.start(texture);
     }
-    public static void Stop(Movie movie) {
+    public static void Stop(MovieSurfaceTexture movie) {
         LOG("VideoplayerExtension: Stopping video");
         movie.stop();
     }
-    public static void Pause(Movie movie) {
+    public static void Pause(MovieSurfaceTexture movie) {
         LOG("VideoplayerExtension: Pausing video");
         movie.pause();
+    }
+    public static void SetupSurface(MovieSurfaceTexture movie, int texture) {
+        LOG("VideoplayerExtension: Starting video");
+        movie.setupSurface(texture);
     }
 }

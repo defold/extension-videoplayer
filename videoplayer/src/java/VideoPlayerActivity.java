@@ -1,3 +1,5 @@
+// Only used in the test with movie_textureview.java
+
 package com.defold.android.videoplayer;
 
 import android.app.Activity;

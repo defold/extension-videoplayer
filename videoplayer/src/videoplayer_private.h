@@ -8,6 +8,7 @@ struct VideoInfo
 {
     int m_Width;
     int m_Height;
+    int m_Depth;
 };
 
 struct Video
@@ -21,8 +22,9 @@ struct Video
 
 enum VideoEvent
 {
-    VIDEO_EVENT_READY,      // Called when the video is ready to start playing
-    VIDEO_EVENT_FRAME_READY,      // Called when a new video frame is ready
+    VIDEO_EVENT_READY,          // Called when the video is ready to start playing
+    VIDEO_EVENT_FRAME_READY,    // Called when a new video frame is ready
+    VIDEO_EVENT_FAILED,         // The operation failed
 };
 
 struct VideoEventInfo
@@ -53,5 +55,5 @@ void            VideoPlayer_Update(float dt, HNativeVideo video); // vpx videos 
 
 
 // Helper functions
-dmBuffer::Result VideoPlayer_CreateBuffer(int width, int height, dmBuffer::HBuffer* buffer);
+dmBuffer::Result VideoPlayer_CreateBuffer(int width, int height, int depth, dmBuffer::HBuffer* buffer);
 

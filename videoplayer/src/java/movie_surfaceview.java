@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-class Movie implements MediaPlayer.OnPreparedListener {
+class MovieSurfaceView implements MediaPlayer.OnPreparedListener {
 
     private static void LOG(String message) {
         Log.v("defold-videoplayer", message);
@@ -62,7 +62,7 @@ class Movie implements MediaPlayer.OnPreparedListener {
     private native void handleVideoFrame(int id, int width, int height, Bitmap bitmap);
     private native void videoIsReady(int id, int width, int height);
 
-    private static void setup(final Movie instance, Context context) {
+    private static void setup(final MovieSurfaceView instance, Context context) {
         LOG("MOVIE: setup()");
         final Activity activity = (Activity)context;
 
@@ -169,20 +169,20 @@ class Movie implements MediaPlayer.OnPreparedListener {
         LOG("MOVIE: setup() end");
     }
 
-    public Movie(final Context context, String _uri, int _id){
-        LOG("MOVIE: Movie()");
+    public MovieSurfaceView(final Context context, String _uri, int _id){
+        LOG("MOVIE: MovieSurfaceView()");
         uri = _uri;
         id = _id;
 
         isOK = false;
         isReady = false;
 
-        final Movie instance = this;
+        final MovieSurfaceView instance = this;
         Activity activity = (Activity)context;
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Movie.setup(instance, context);
+                MovieSurfaceView.setup(instance, context);
                 instance.isOK = true;
             }
         });
@@ -190,7 +190,7 @@ class Movie implements MediaPlayer.OnPreparedListener {
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer){
-        LOG("MOVIE: Movie onPrepared()");
+        LOG("MOVIE: MovieSurfaceView onPrepared()");
         bitmap = Bitmap.createBitmap(
             mediaPlayer.getVideoWidth(),
             mediaPlayer.getVideoHeight(),
@@ -210,7 +210,7 @@ class Movie implements MediaPlayer.OnPreparedListener {
     }
 
     public void close(){
-        LOG("MOVIE: Movie close()");
+        LOG("MOVIE: MovieSurfaceView close()");
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -243,7 +243,7 @@ class Movie implements MediaPlayer.OnPreparedListener {
             return;
         }
 
-        LOG("MOVIE: Movie Update");
+        LOG("MOVIE: MovieSurfaceView Update");
         surfaceView.draw(canvas);
 
     Paint paint = new Paint();
@@ -263,17 +263,17 @@ class Movie implements MediaPlayer.OnPreparedListener {
     }
 
     public void start(){
-        LOG("MOVIE: Movie start()");
+        LOG("MOVIE: MovieSurfaceView start()");
         mediaPlayer.start();
     }
 
     public void stop(){
-        LOG("MOVIE: Movie stop()");
+        LOG("MOVIE: MovieSurfaceView stop()");
         mediaPlayer.stop();
     }
 
     public void pause(){
-        LOG("MOVIE: Movie pause()");
+        LOG("MOVIE: MovieSurfaceView pause()");
         mediaPlayer.pause();
     }
 }

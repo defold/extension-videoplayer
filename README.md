@@ -1,3 +1,9 @@
+# WIP
+
+This branch is currently non functional
+It is an attempt to use the built in videoplayer support to play sound
+and also grab the image data into a buffer.
+
 # extension-videoplayer
 
 Example of creating a videoplayer (.webm) through native extensions.

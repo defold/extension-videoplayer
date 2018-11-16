@@ -18,7 +18,7 @@
 #include <android/log.h>
 
 const static int s_MaxNumVideos = 1;
-static const int s_BytesPerPixel = 3;
+static int s_BytesPerPixel = 3;
 
 struct SVideoPlayerContext
 {
@@ -32,19 +32,14 @@ SVideoPlayerContext g_VideoPlayerContext;
 
 static int VideoPlayer_EventCallback(const VideoEventInfo* info, void* ctx)
 {
-    __android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "VideoPlayer_EventCallback");
+    //__android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "VideoPlayer_EventCallback");
     Video* video = (Video*)ctx;
     if (info->m_Event == VIDEO_EVENT_READY)
     {
     __android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "VIDEO_EVENT_READY");
         if (video->m_VideoBufferLuaRef == LUA_NOREF)
         {
-            VideoInfo info;
-            VideoPlayer_GetInfo(video->m_Video, info);
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "VIDEO_EVENT_READY INFO: %d, %d", info.m_Width, info.m_Height);
-
-            dmBuffer::Result r = VideoPlayer_CreateBuffer(info.m_Width, info.m_Height, &video->m_VideoBuffer);
+            dmBuffer::Result r = VideoPlayer_CreateBuffer(info->m_Width, info->m_Height, info->m_Depth, &video->m_VideoBuffer);
             // TODO: Call user if it failed
 
             // Increase ref count
@@ -62,7 +57,7 @@ static int VideoPlayer_EventCallback(const VideoEventInfo* info, void* ctx)
     }
     else if (info->m_Event == VIDEO_EVENT_FRAME_READY)
     {
-    __android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "VIDEO_EVENT_FRAME_READY");
+    //__android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "VIDEO_EVENT_FRAME_READY");
         if (video->m_VideoBuffer)
         {
             uint8_t* data = 0;
@@ -79,9 +74,9 @@ static int VideoPlayer_EventCallback(const VideoEventInfo* info, void* ctx)
             }
             else // They're the same, we can do a full copy
             {
-    __android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "CASE2: width: %d  height: %d  depth: %d  stride: %d", info->m_Width, info->m_Height, info->m_Depth, info->m_Stride);
+    //__android_log_print(ANDROID_LOG_VERBOSE, "defold-videoplayer", "CASE2: width: %d  height: %d  depth: %d  stride: %d", info->m_Width, info->m_Height, info->m_Depth, info->m_Stride);
 
-                dmLogWarning("FRAME: Width: %u   stride: %u", (info->m_Width * info->m_Depth), info->m_Stride);
+                // dmLogWarning("FRAME: Width: %u   stride: %u", (info->m_Width * info->m_Depth), info->m_Stride);
                 memcpy((void*)data, info->m_Data, datasize);
             }
 
@@ -94,7 +89,7 @@ static int VideoPlayer_EventCallback(const VideoEventInfo* info, void* ctx)
 static Video* CheckVideo(lua_State* L, int index)
 {
     Video* video = (Video*)(uintptr_t)luaL_checknumber(L, index);
-    if (video == 0 || video->m_Video == 0)
+    if (video == 0 || video->m_Video < 0)
     {
         return (Video*)(uintptr_t)luaL_error(L, "Invalid video passed in");
     }
@@ -119,7 +114,7 @@ static int Open(lua_State* L)
         memset(video, 0, sizeof(Video));
 
         HNativeVideo nativevideo = VideoPlayer_Open(uri, VideoPlayer_EventCallback, (void*)video);
-        if (nativevideo) {
+        if (nativevideo >= 0) {
             video->m_Video = nativevideo;
             video->m_L = L;
             video->m_VideoBufferLuaRef = LUA_NOREF;
@@ -128,6 +123,10 @@ static int Open(lua_State* L)
 
             g_VideoPlayerContext.m_Videos[video->m_Id] = video;
             g_VideoPlayerContext.m_IsReady[video->m_Id] = false;
+
+
+dmLogWarning("MAWE: Video created: %p", video);
+
             lua_pushnumber(L, (uintptr_t)video);
         } else {
             free(video);
@@ -184,7 +183,6 @@ static int IsReady(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 1);
     Video* video = CheckVideo(L, 1);
-    //bool ready = VideoPlayer_IsReady(video->m_Video) != 0;
     bool ready = g_VideoPlayerContext.m_IsReady[video->m_Id];
     lua_pushboolean(L, ready);
     return 1;
@@ -203,7 +201,7 @@ static int GetInfo(lua_State* L)
     lua_setfield(L, -2, "width");
     lua_pushnumber(L, info.m_Height);
     lua_setfield(L, -2, "height");
-    lua_pushnumber(L, s_BytesPerPixel);     // TODO: Check if we can use ARGB instead, for even faster copies
+    lua_pushnumber(L, info.m_Depth);     // TODO: Check if we can use ARGB instead, for even faster copies
     lua_setfield(L, -2, "bytes_per_pixel");
     return 1;
 }
@@ -216,11 +214,22 @@ static int GetBuffer(lua_State* L)
     return 1;
 }
 
+static int Update(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+    Video* video = CheckVideo(L, 1);
+    float dt = (float) luaL_checknumber(L, 2);
+
+    VideoInfo info;
+    VideoPlayer_Update(video->m_Video, dt);
+    return 0;
+}
+
 static const luaL_reg Module_methods[] =
 {
     {"open", Open},
     {"close", Close},
-    //{"update", Update}, // In the vpx case, let the extension update them all
+    {"update", Update}, // In the vpx case, let the extension update them all
     {"start", Start},
     {"stop", Stop},
     {"pause", Pause},

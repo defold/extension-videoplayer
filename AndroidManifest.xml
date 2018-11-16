@@ -63,6 +63,7 @@
           android:label="IAP">
         </activity>
 
+        <!--
         <activity android:name="com.defold.android.videoplayer.VideoPlayerActivity"
           android:theme="@android:style/Theme.Translucent.NoTitleBar"
           android:label="VideoPlayer"
@@ -74,6 +75,7 @@
           android:windowIsFloating="true"
           android:backgroundDimEnabled="false"
         />
+    -->
 
         <!-- For Local Notifications -->
         <activity android:name="com.defold.push.LocalPushDispatchActivity"
@@ -115,8 +117,6 @@
                <data android:scheme="{{android.package}}" />
             </intent-filter>
         </activity>
-
-        <service android:name="com.defold.videoplayer.VideoPlayerService" android:exported="false"/>
 
         <service android:name="com.defold.adtruth.InstallReceiver"/>
         <receiver

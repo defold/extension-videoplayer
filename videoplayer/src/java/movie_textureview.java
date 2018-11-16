@@ -39,7 +39,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 
-class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextureListener {
+class MovieTextureView implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextureListener {
 
     private static void LOG(String message) {
         Log.v("defold-videoplayer", message);
@@ -65,7 +65,7 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
     private native void handleVideoFrame(int id, int width, int height, Bitmap bitmap);
     private native void videoIsReady(int id, int width, int height);
 
-    private static void setup(final Movie instance, Context context) {
+    private static void setup(final MovieTextureView instance, Context context) {
         LOG("MOVIE: setup()");
         final Activity activity = (Activity)context;
 
@@ -186,23 +186,14 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
         LOG("MOVIE: startActivity() end");
     }
 
-    private static void startService(Context context) {
-        LOG("MOVIE: startService()");
-        Intent intent = new Intent(context.getApplicationContext(), VideoPlayerService.class);
-        intent.putExtra("TEST_MESSAGE", "HELLO FROM Service");
-        context.startService(intent);
-        LOG("MOVIE: startService() end");
-    }
-
     public static void init(final Context context){
         LOG("MOVIE: init()");
-        //startActivity(context);
-        startService(context);
+        startActivity(context);
         activityStarted = true;
     }
 
-    public Movie(final Context context, String _uri, int _id){
-        LOG("MOVIE: Movie()");
+    public MovieTextureView(final Context context, String _uri, int _id){
+        LOG("MOVIE: MovieTextureView()");
         uri = _uri;
         id = _id;
         isOK = false;
@@ -216,9 +207,7 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
 
         this.context = context;
         final Activity activity = (Activity)context;
-        final Movie movie = this;
-
-        //final TextureView view = textureView;
+        final MovieTextureView movie = this;
 
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -241,14 +230,14 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-        LOG("MOVIE: Movie onSurfaceTextureAvailable()");
+        LOG("MOVIE: MovieTextureView onSurfaceTextureAvailable()");
         surface = new Surface(surfaceTexture);
-        final Movie instance = this;
+        final MovieTextureView instance = this;
         final Context context = this.context;
         ((Activity)context).runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Movie.setup(instance, context);
+                MovieTextureView.setup(instance, context);
             }
         });
     }
@@ -256,25 +245,25 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
        // Log.i(TAG,"onSurfaceTextureSizeChanged");
-        LOG("MOVIE: Movie onSurfaceTextureSizeChanged()");
+        LOG("MOVIE: MovieTextureView onSurfaceTextureSizeChanged()");
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
        // Log.i(TAG,"onSurfaceTextureDestroyed");
-        LOG("MOVIE: Movie onSurfaceTextureDestroyed()");
+        LOG("MOVIE: MovieTextureView onSurfaceTextureDestroyed()");
         return true;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
        // Log.i(TAG,"onSurfaceTextureUpdated");
-        LOG("MOVIE: Movie onSurfaceTextureUpdated()");
+        LOG("MOVIE: MovieTextureView onSurfaceTextureUpdated()");
     }
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer){
-        LOG("MOVIE: Movie onPrepared()");
+        LOG("MOVIE: MovieTextureView onPrepared()");
         // bitmap = Bitmap.createBitmap(
         //     mediaPlayer.getVideoWidth(),
         //     mediaPlayer.getVideoHeight(),
@@ -297,7 +286,7 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
     }
 
     public void close(){
-        LOG("MOVIE: Movie close()");
+        LOG("MOVIE: MovieTextureView close()");
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -330,7 +319,7 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
             return;
         }
 
-        LOG("MOVIE: Movie Update");
+        LOG("MOVIE: MovieTextureView Update");
     //     textureView.draw(canvas);
 
     // Paint paint = new Paint();
@@ -354,17 +343,17 @@ class Movie implements MediaPlayer.OnPreparedListener, TextureView.SurfaceTextur
     }
 
     public void start(){
-        LOG("MOVIE: Movie start()");
+        LOG("MOVIE: MovieTextureView start()");
         mediaPlayer.start();
     }
 
     public void stop(){
-        LOG("MOVIE: Movie stop()");
+        LOG("MOVIE: MovieTextureView stop()");
         mediaPlayer.stop();
     }
 
     public void pause(){
-        LOG("MOVIE: Movie pause()");
+        LOG("MOVIE: MovieTextureView pause()");
         mediaPlayer.pause();
     }
 }
