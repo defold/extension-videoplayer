@@ -106,7 +106,7 @@ static int Open(lua_State* L)
     memset(data, 0, datasize);
 
     // Increase ref count
-    dmScript::LuaHBuffer buffer = {movie->m_VideoBuffer, false};
+    dmScript::LuaHBuffer buffer(movie->m_VideoBuffer, dmScript::OWNER_C );
     dmScript::PushBuffer(L, buffer);
     movie->m_VideoBufferLuaRef = dmScript::Ref(L, LUA_REGISTRYINDEX);
 
