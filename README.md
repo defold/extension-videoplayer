@@ -41,7 +41,14 @@ Opens a video resource, and returns a handle to the instance.
 
 ## videoplayer.get_info(video)
 
-Gets the info about the video, such as width and height
+Gets the info about the video:
+
+* width - in pixels
+* height - in pixels
+* bytes_per_pixel
+* frame - current frame
+* time - current time in seconds
+* eos - true if end of stream was reached
 
 ## videoplayer.get_frame(video)
 
