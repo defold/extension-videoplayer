@@ -268,11 +268,25 @@ static int GetInfo(lua_State* L)
     lua_pushstring(L, "width");
     lua_pushnumber(L, movie->m_VpxCtx.width);
     lua_rawset(L, -3);
+
     lua_pushstring(L, "height");
     lua_pushnumber(L, movie->m_VpxCtx.height);
     lua_rawset(L, -3);
+
     lua_pushstring(L, "bytes_per_pixel");
     lua_pushnumber(L, s_BytesPerPixel);
+    lua_rawset(L, -3);
+
+    lua_pushstring(L, "frame");
+    lua_pushnumber(L, movie->m_Frame);
+    lua_rawset(L, -3);
+
+    lua_pushstring(L, "time");
+    lua_pushnumber(L, movie->m_Time);
+    lua_rawset(L, -3);
+
+    lua_pushstring(L, "eos");
+    lua_pushboolean(L, movie->m_WebmCtx.reached_eos);
     lua_rawset(L, -3);
 
     return 1;
