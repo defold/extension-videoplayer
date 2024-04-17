@@ -11,10 +11,6 @@ Example of creating a videoplayer (.webm) through native extensions.
 Although we aim to provide good example functionality in this example, we cannot guarantee the quality/stability at all times.
 Please regard it as just that, an example, and don't rely on this as a dependency for your production code.
 
-# Known issues
-
-The currently unsupported platforms are: Windows
-
 # How to build the libraries
 
 [Instructions here](videoplayer/utils/README.md)
