@@ -1,15 +1,18 @@
-NOTE: This is an example extension, with no sound support.
-To use a native videoplayer (Android/iOS), we recommend [extension-videoplayer-native](https://github.com/defold/extension-videoplayer-native) instead.
+# Disclaimer
+
+This is an example extension, with no sound support. Although we aim to provide good example functionality in this example, we cannot guarantee the quality/stability at all times.
+Please regard it as just that, an example, and don't rely on this as a dependency for your production code.
+
+Alternative videoplayers:
+
+* Native videoplayer (Android/iOS) - [extension-videoplayer-native](https://github.com/defold/extension-videoplayer-native)
+* MPEG1 videoplayer - [extension-videoplayer-mpeg](https://github.com/defold/extension-videoplayer-mpeg)
 
 
 # extension-videoplayer
 
 Example of creating a videoplayer (.webm) through native extensions.
 
-# Disclaimer
-
-Although we aim to provide good example functionality in this example, we cannot guarantee the quality/stability at all times.
-Please regard it as just that, an example, and don't rely on this as a dependency for your production code.
 
 # How to build the libraries
 
