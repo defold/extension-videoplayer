@@ -60,10 +60,6 @@ jobs:
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/include/webm
-          rsync -a libvpx/include/ artifacts/videoplayer/include/
-          cp libvpx/vpx_config.h artifacts/videoplayer/include/
-          rsync -a libvpx/third_party/libwebm/*.h artifacts/videoplayer/include/webm/ || true
           mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx}
           cp libvpx/build-x86_64-osx/libvpx.a artifacts/videoplayer/lib/x86_64-osx/
           cp libvpx/build-arm64-osx/libvpx.a artifacts/videoplayer/lib/arm64-osx/
