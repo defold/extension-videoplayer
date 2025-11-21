@@ -212,7 +212,6 @@ jobs:
           build_webm 1 build/html5-wasm
           popd
           popd
-          popd
       - name: Collect artifacts
         run: |
           mkdir -p artifacts/videoplayer/lib/js-web artifacts/videoplayer/lib/wasm-web
