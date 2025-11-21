@@ -27,7 +27,7 @@ on:
         description: Build Windows binaries
         required: false
         default: "true"
-    push:
+  push:
       
 env:
   LIBVPX_REF: ${{ inputs.libvpx-ref || 'v1.15.2' }}
