@@ -24,7 +24,7 @@ fi
 
 ARCH_FLAGS="-arch ${ARCH}"
 
-CPP_FLAGS="${ARCH_FLAGS} -fembed-bitcode -miphoneos-version-min=${MIN_IOS_VERSION} -isysroot ${IOS_SDK} -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat -I../../.."
+CPP_FLAGS="${ARCH_FLAGS} -std=c++11 -fembed-bitcode -miphoneos-version-min=${MIN_IOS_VERSION} -isysroot ${IOS_SDK} -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat -I../../.."
 
 OUTDIR="build/ios/${ARCH}"
 

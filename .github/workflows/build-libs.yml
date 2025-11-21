@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   macos:
-    name: macOS + iOS
+    name: macOS
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +37,29 @@ jobs:
           bash "$GITHUB_WORKSPACE/videoplayer/utils/webm/build_osx.sh" arm64
           popd
           popd
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx}
+          cp libvpx/build-x86_64-osx/libvpx.a artifacts/videoplayer/lib/x86_64-osx/
+          cp libvpx/build-arm64-osx/libvpx.a artifacts/videoplayer/lib/arm64-osx/
+          cp libvpx/third_party/libwebm/build/osx/x86_64/libwebm.a artifacts/videoplayer/lib/x86_64-osx/
+          cp libvpx/third_party/libwebm/build/osx/arm64/libwebm.a artifacts/videoplayer/lib/arm64-osx/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-macos
+          path: artifacts
+
+  ios:
+    name: iOS
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build deps
+        run: |
+          brew update
+          brew install yasm
+      - name: Fetch libvpx
+        run: git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 libvpx
       - name: Build iOS libs
         env:
           MIN_IOS_VERSION: "12.0"
@@ -49,16 +72,12 @@ jobs:
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx,arm64-ios}
-          cp libvpx/build-x86_64-osx/libvpx.a artifacts/videoplayer/lib/x86_64-osx/
-          cp libvpx/build-arm64-osx/libvpx.a artifacts/videoplayer/lib/arm64-osx/
-          cp libvpx/third_party/libwebm/build/osx/x86_64/libwebm.a artifacts/videoplayer/lib/x86_64-osx/
-          cp libvpx/third_party/libwebm/build/osx/arm64/libwebm.a artifacts/videoplayer/lib/arm64-osx/
+          mkdir -p artifacts/videoplayer/lib/arm64-ios
           cp libvpx/build-arm64-ios/libvpx.a artifacts/videoplayer/lib/arm64-ios/
           cp libvpx/third_party/libwebm/build/ios/arm64/libwebm.a artifacts/videoplayer/lib/arm64-ios/
       - uses: actions/upload-artifact@v4
         with:
-          name: libs-macos
+          name: libs-ios
           path: artifacts
 
   android:
@@ -68,9 +87,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install toolchain
         id: setup-ndk
-        uses: android-actions/setup-ndk@v3
+        uses: nttld/setup-ndk@v1
         with:
-          ndk-version: 25.2.9519653
+          ndk-version: r25c
       - name: Install build deps
         run: sudo apt-get update && sudo apt-get install -y build-essential yasm
       - name: Fetch libvpx
@@ -94,6 +113,7 @@ jobs:
             ${CXX} -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
               --target=armv7a-linux-androideabi21 \
               --sysroot="${SYSROOT}" \
+              -std=c++11 \
               -fPIC \
               -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
               -Wno-extern-c-compat \
@@ -119,7 +139,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential python3
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3 yasm
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v13
         with:
@@ -137,6 +157,7 @@ jobs:
           pushd "${OUTDIR}"
           for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
             em++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+              -std=c++11 \
               -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
               -Wno-extern-c-compat \
               -s DISABLE_EXCEPTION_CATCHING=1 \
@@ -177,6 +198,7 @@ jobs:
             mingw-w64-x86_64-pkg-config
             mingw-w64-i686-pkg-config
             yasm
+            diffutils
       - name: Fetch libvpx
         run: git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 libvpx
       - name: Build Windows libs
@@ -214,6 +236,7 @@ jobs:
           pushd "${OUT64}"
           for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
             x86_64-w64-mingw32-g++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+              -std=c++11 \
               -static-libgcc -static-libstdc++ \
               -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
               -Wno-extern-c-compat \
@@ -227,6 +250,7 @@ jobs:
           pushd "${OUT32}"
           for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
             i686-w64-mingw32-g++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+              -std=c++11 \
               -static-libgcc -static-libstdc++ \
               -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
               -Wno-extern-c-compat \
@@ -252,6 +276,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - macos
+      - ios
       - android
       - html5
       - windows

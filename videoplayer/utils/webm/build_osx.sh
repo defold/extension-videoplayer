@@ -28,7 +28,7 @@ case "${ARCH}" in
         ;;
 esac
 
-CPP_FLAGS="${ARCH_FLAGS} -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat ${MACOSX_VERSION} -I../../.."
+CPP_FLAGS="${ARCH_FLAGS} -std=c++11 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat ${MACOSX_VERSION} -I../../.."
 
 OUTDIR="build/osx/${ARCH}"
 
