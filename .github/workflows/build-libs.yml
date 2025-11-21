@@ -72,17 +72,12 @@ jobs:
           fi
           rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx/ artifacts/videoplayer/include/vpx/
           rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx_ports/ artifacts/videoplayer/include/vpx_ports/
-          if [[ -f libvpx/webmdec.h || -f libvpx/examples/webmdec.h ]]; then
-            mkdir -p artifacts/videoplayer/include/webm
-            if [[ -f libvpx/webmdec.h ]]; then
-              cp libvpx/webmdec.h artifacts/videoplayer/include/webm/webmdec.h
-            else
-              cp libvpx/examples/webmdec.h artifacts/videoplayer/include/webm/webmdec.h
-            fi
+          rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/webm* artifacts/videoplayer/include/webm/ || true
+          if [[ -d libvpx/third_party/libwebm ]]; then
+            rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/third_party/libwebm/ artifacts/videoplayer/include/webm/ || true
           fi
-          if [[ -f libvpx/tools_common.h ]]; then
-            mkdir -p artifacts/videoplayer/include/webm
-            cp libvpx/tools_common.h artifacts/videoplayer/include/webm/tools_common.h
+          if [[ -f libvpx/build-x86_64-osx/vpx_config.h ]]; then
+            cp libvpx/build-x86_64-osx/vpx_config.h artifacts/videoplayer/include/vpx_config.h
           fi
           if [[ -f libvpx/build-x86_64-osx/vpx_config.h ]]; then
             cp libvpx/build-x86_64-osx/vpx_config.h artifacts/videoplayer/include/vpx_config.h
@@ -455,16 +450,9 @@ jobs:
             rsync -a "${TMP_ROOT}/libvpx/vpx_ports/" "${STAGED_INCLUDE}/vpx_ports/"
             STAGED_HAS_HEADERS=1
           fi
-          if [[ -f "${TMP_ROOT}/libvpx/webmdec.h" && ! -f "${STAGED_INCLUDE}/webm/webmdec.h" ]]; then
-            mkdir -p "${STAGED_INCLUDE}/webm"
-            cp "${TMP_ROOT}/libvpx/webmdec.h" "${STAGED_INCLUDE}/webm/webmdec.h"
-          elif [[ -f "${TMP_ROOT}/libvpx/examples/webmdec.h" && ! -f "${STAGED_INCLUDE}/webm/webmdec.h" ]]; then
-            mkdir -p "${STAGED_INCLUDE}/webm"
-            cp "${TMP_ROOT}/libvpx/examples/webmdec.h" "${STAGED_INCLUDE}/webm/webmdec.h"
-          fi
-          if [[ -f "${TMP_ROOT}/libvpx/tools_common.h" && ! -f "${STAGED_INCLUDE}/webm/tools_common.h" ]]; then
-            mkdir -p "${STAGED_INCLUDE}/webm"
-            cp "${TMP_ROOT}/libvpx/tools_common.h" "${STAGED_INCLUDE}/webm/tools_common.h"
+          rsync -a --include '*/' --include '*.h' --exclude '*' "${TMP_ROOT}/libvpx/webm"* "${STAGED_INCLUDE}/webm/" || true
+          if [[ -d "${TMP_ROOT}/libvpx/third_party/libwebm" ]]; then
+            rsync -a --include '*/' --include '*.h' --exclude '*' "${TMP_ROOT}/libvpx/third_party/libwebm/" "${STAGED_INCLUDE}/webm/" || true
           fi
           if [[ "${STAGED_HAS_HEADERS}" == "0" ]]; then
             echo "libvpx headers not found; aborting header update to avoid clearing includes."
