@@ -22,6 +22,8 @@ struct WebmInputContext {
   void *reader;
   void *segment;
   uint8_t *buffer;
+  uint8_t *input_buffer;
+  int64_t input_buffer_length;
   const void *cluster;
   const void *block_entry;
   const void *block;
