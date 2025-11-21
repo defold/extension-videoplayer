@@ -164,6 +164,10 @@ jobs:
           cp libvpx/build-arm64-android/libvpx.a artifacts/videoplayer/lib/arm64-android/
           cp libvpx/third_party/libwebm/build/android/armv7/libwebm.a artifacts/videoplayer/lib/armv7-android/
           cp libvpx/third_party/libwebm/build/android/arm64/libwebm.a artifacts/videoplayer/lib/arm64-android/
+          test -f artifacts/videoplayer/lib/armv7-android/libvpx.a
+          test -f artifacts/videoplayer/lib/armv7-android/libwebm.a
+          test -f artifacts/videoplayer/lib/arm64-android/libvpx.a
+          test -f artifacts/videoplayer/lib/arm64-android/libwebm.a
       - uses: actions/upload-artifact@v4
         with:
           name: libs-android
@@ -219,6 +223,10 @@ jobs:
           cp libvpx/third_party/libwebm/build/html5/libwebm.a artifacts/videoplayer/lib/js-web/
           cp libvpx/build-wasm-web/libvpx.a artifacts/videoplayer/lib/wasm-web/
           cp libvpx/third_party/libwebm/build/html5-wasm/libwebm.a artifacts/videoplayer/lib/wasm-web/
+          test -f artifacts/videoplayer/lib/js-web/libvpx.a
+          test -f artifacts/videoplayer/lib/js-web/libwebm.a
+          test -f artifacts/videoplayer/lib/wasm-web/libvpx.a
+          test -f artifacts/videoplayer/lib/wasm-web/libwebm.a
       - uses: actions/upload-artifact@v4
         with:
           name: libs-js
