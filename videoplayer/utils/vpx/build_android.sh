@@ -11,6 +11,21 @@ if [[ -z "${SDK_PATH}" ]]; then
     exit 1
 fi
 
+HOST_UNAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+HOST_ARCH=$(uname -m)
+case "${HOST_ARCH}" in
+    x86_64|amd64) HOST_ARCH="x86_64" ;;
+    arm64|aarch64) HOST_ARCH="arm64" ;;
+esac
+HOST_TAG="${HOST_UNAME}-${HOST_ARCH}"
+TOOLCHAIN="${SDK_PATH}/toolchains/llvm/prebuilt/${HOST_TAG}"
+if [[ ! -d "${TOOLCHAIN}" ]]; then
+    echo "NDK toolchain not found at ${TOOLCHAIN}" >&2
+    exit 1
+fi
+export PATH="${TOOLCHAIN}/bin:${PATH}"
+SYSROOT="${TOOLCHAIN}/sysroot"
+
 BUILD_DIR="build-armv7-android"
 
 mkdir -p "${BUILD_DIR}"
@@ -21,16 +36,18 @@ if [[ -f Makefile ]]; then
 fi
 
 CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=vfp" \
+LDFLAGS="--sysroot=${SYSROOT}" \
+EXTRA_CFLAGS="--sysroot=${SYSROOT}" \
 ../configure \
     --prefix=armv7-android \
-    --target=armv7-android-gcc \
+    --target=armv7-android-clang \
     --disable-neon \
     --disable-neon-asm \
     --disable-examples \
     --disable-unit-tests \
     --disable-docs \
     --disable-tools \
-    --sdk-path="${SDK_PATH}"
+    --enable-pic
 
 make -j"$(nproc)"
 
