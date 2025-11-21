@@ -65,6 +65,11 @@ jobs:
           cp libvpx/build-arm64-osx/libvpx.a artifacts/videoplayer/lib/arm64-osx/
           cp libvpx/third_party/libwebm/build/osx/x86_64/libwebm.a artifacts/videoplayer/lib/x86_64-osx/
           cp libvpx/third_party/libwebm/build/osx/arm64/libwebm.a artifacts/videoplayer/lib/arm64-osx/
+          if [[ -f libvpx/README.md ]]; then
+            cp libvpx/README.md artifacts/videoplayer/include/README.txt
+          else
+            touch artifacts/videoplayer/include/README.txt
+          fi
           rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx/ artifacts/videoplayer/include/vpx/
           rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx_ports/ artifacts/videoplayer/include/vpx_ports/
           if [[ -f libvpx/webmdec.h ]]; then
