@@ -28,7 +28,7 @@ on:
         required: false
         default: "true"
   push:
-      
+
 env:
   LIBVPX_REF: ${{ inputs.libvpx-ref || 'v1.15.2' }}
 
@@ -39,7 +39,7 @@ jobs:
   macos:
     name: macOS
     runs-on: macos-13
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build-macos == 'true' }}
+    if: ${{ github.event_name == 'push' || inputs.build-macos != 'false' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install build deps
@@ -77,7 +77,7 @@ jobs:
   ios:
     name: iOS
     runs-on: macos-13
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build-ios == 'true' }}
+    if: ${{ github.event_name == 'push' || inputs.build-ios != 'false' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install build deps
@@ -113,7 +113,7 @@ jobs:
   android:
     name: Android
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build-android == 'true' }}
+    if: ${{ github.event_name == 'push' || inputs.build-android != 'false' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install toolchain
@@ -171,7 +171,7 @@ jobs:
   html5:
     name: HTML5
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build-html5 == 'true' }}
+    if: ${{ github.event_name == 'push' || inputs.build-html5 != 'false' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -221,7 +221,7 @@ jobs:
   windows:
     name: Windows
     runs-on: windows-2022
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build-windows == 'true' }}
+    if: ${{ github.event_name == 'push' || inputs.build-windows != 'false' }}
     defaults:
       run:
         shell: msys2 {0}
