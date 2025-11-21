@@ -60,11 +60,20 @@ jobs:
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx}
+          mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx} artifacts/videoplayer/include
           cp libvpx/build-x86_64-osx/libvpx.a artifacts/videoplayer/lib/x86_64-osx/
           cp libvpx/build-arm64-osx/libvpx.a artifacts/videoplayer/lib/arm64-osx/
           cp libvpx/third_party/libwebm/build/osx/x86_64/libwebm.a artifacts/videoplayer/lib/x86_64-osx/
           cp libvpx/third_party/libwebm/build/osx/arm64/libwebm.a artifacts/videoplayer/lib/arm64-osx/
+          rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx/ artifacts/videoplayer/include/vpx/
+          rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx_ports/ artifacts/videoplayer/include/vpx_ports/
+          if [[ -f libvpx/examples/webmdec.h ]]; then
+            mkdir -p artifacts/videoplayer/include/webm
+            cp libvpx/examples/webmdec.h artifacts/videoplayer/include/webm/webmdec.h
+          fi
+          if [[ -f libvpx/build-x86_64-osx/vpx_config.h ]]; then
+            cp libvpx/build-x86_64-osx/vpx_config.h artifacts/videoplayer/include/vpx_config.h
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: libs-macos
