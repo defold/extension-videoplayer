@@ -76,6 +76,16 @@ jobs:
           if [[ -d libvpx/third_party/libwebm ]]; then
             rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/third_party/libwebm/ artifacts/videoplayer/include/webm/ || true
           fi
+          if [[ -f libvpx/tools_common.h ]]; then
+            mkdir -p artifacts/videoplayer/include/webm artifacts/videoplayer/include/vpx/tools
+            cp libvpx/tools_common.h artifacts/videoplayer/include/webm/tools_common.h
+            cp libvpx/tools_common.h artifacts/videoplayer/include/vpx/tools/tools_common.h
+          fi
+          if [[ -f libvpx/y4minput.h ]]; then
+            mkdir -p artifacts/videoplayer/include/webm artifacts/videoplayer/include/vpx/tools
+            cp libvpx/y4minput.h artifacts/videoplayer/include/webm/y4minput.h
+            cp libvpx/y4minput.h artifacts/videoplayer/include/vpx/tools/y4minput.h
+          fi
           if [[ -f libvpx/build-x86_64-osx/vpx_config.h ]]; then
             cp libvpx/build-x86_64-osx/vpx_config.h artifacts/videoplayer/include/vpx_config.h
           fi
@@ -453,6 +463,16 @@ jobs:
           rsync -a --include '*/' --include '*.h' --exclude '*' "${TMP_ROOT}/libvpx/webm"* "${STAGED_INCLUDE}/webm/" || true
           if [[ -d "${TMP_ROOT}/libvpx/third_party/libwebm" ]]; then
             rsync -a --include '*/' --include '*.h' --exclude '*' "${TMP_ROOT}/libvpx/third_party/libwebm/" "${STAGED_INCLUDE}/webm/" || true
+          fi
+          if [[ -f "${TMP_ROOT}/libvpx/tools_common.h" ]]; then
+            mkdir -p "${STAGED_INCLUDE}/webm" "${STAGED_INCLUDE}/vpx/tools"
+            cp "${TMP_ROOT}/libvpx/tools_common.h" "${STAGED_INCLUDE}/webm/tools_common.h"
+            cp "${TMP_ROOT}/libvpx/tools_common.h" "${STAGED_INCLUDE}/vpx/tools/tools_common.h"
+          fi
+          if [[ -f "${TMP_ROOT}/libvpx/y4minput.h" ]]; then
+            mkdir -p "${STAGED_INCLUDE}/webm" "${STAGED_INCLUDE}/vpx/tools"
+            cp "${TMP_ROOT}/libvpx/y4minput.h" "${STAGED_INCLUDE}/webm/y4minput.h"
+            cp "${TMP_ROOT}/libvpx/y4minput.h" "${STAGED_INCLUDE}/vpx/tools/y4minput.h"
           fi
           if [[ "${STAGED_HAS_HEADERS}" == "0" ]]; then
             echo "libvpx headers not found; aborting header update to avoid clearing includes."
