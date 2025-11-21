@@ -356,6 +356,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           set -euo pipefail
+          if [[ ! -d "downloaded-artifacts" ]]; then
+            echo "No artifacts found; skipping header update."
+            exit 0
+          fi
           TMP_ROOT="$(mktemp -d)"
           git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 "${TMP_ROOT}/libvpx"
           STAGED_INCLUDE="${TMP_ROOT}/staged-include"
@@ -377,9 +381,10 @@ jobs:
             mkdir -p "${STAGED_INCLUDE}/webm"
             cp "${TMP_ROOT}/libvpx/examples/webmdec.h" "${STAGED_INCLUDE}/webm/webmdec.h"
           fi
-          ARTIFACT_CONFIG=""
-          if [[ -d "downloaded-artifacts" ]]; then
-            ARTIFACT_CONFIG=$(find downloaded-artifacts -type f -path "*/videoplayer/include/vpx_config.h" -print -quit)
+          ARTIFACT_CONFIG=$(find downloaded-artifacts -type f -path "*/videoplayer/include/vpx_config.h" -print -quit || true)
+          if [[ -z "${ARTIFACT_CONFIG}" && "${STAGED_HAS_HEADERS}" == "0" ]]; then
+            echo "No headers staged and no vpx_config.h found; skipping header update."
+            exit 0
           fi
           if [[ -n "${ARTIFACT_CONFIG}" ]]; then
             cp "${ARTIFACT_CONFIG}" "${STAGED_INCLUDE}/vpx_config.h"
@@ -388,7 +393,7 @@ jobs:
           elif [[ -f "videoplayer/include/vpx_config.h" ]]; then
             cp "videoplayer/include/vpx_config.h" "${STAGED_INCLUDE}/vpx_config.h"
           else
-            echo "No vpx_config.h found; leaving headers unchanged."
+            echo "No vpx_config.h found; skipping header update."
             exit 0
           fi
           rsync -a --delete "${STAGED_INCLUDE}/" videoplayer/include/
