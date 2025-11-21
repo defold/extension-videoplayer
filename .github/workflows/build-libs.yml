@@ -360,7 +360,19 @@ jobs:
           git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 "${TMP_ROOT}/libvpx"
           STAGED_INCLUDE="${TMP_ROOT}/staged-include"
           mkdir -p "${STAGED_INCLUDE}"
-          rsync -a "${TMP_ROOT}/libvpx/include/" "${STAGED_INCLUDE}/"
+          STAGED_HAS_HEADERS=0
+          if [[ -d "${TMP_ROOT}/libvpx/vpx" ]]; then
+            rsync -a "${TMP_ROOT}/libvpx/vpx/" "${STAGED_INCLUDE}/vpx/"
+            STAGED_HAS_HEADERS=1
+          fi
+          if [[ -d "${TMP_ROOT}/libvpx/vpx_ports" ]]; then
+            rsync -a "${TMP_ROOT}/libvpx/vpx_ports/" "${STAGED_INCLUDE}/vpx_ports/"
+            STAGED_HAS_HEADERS=1
+          fi
+          if [[ "${STAGED_HAS_HEADERS}" == "0" ]]; then
+            echo "libvpx headers not found; aborting header update to avoid clearing includes."
+            exit 1
+          fi
           if [[ -f "${TMP_ROOT}/libvpx/examples/webmdec.h" ]]; then
             mkdir -p "${STAGED_INCLUDE}/webm"
             cp "${TMP_ROOT}/libvpx/examples/webmdec.h" "${STAGED_INCLUDE}/webm/webmdec.h"
