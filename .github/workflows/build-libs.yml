@@ -1,0 +1,284 @@
+name: Build Native Libs
+
+on:
+  workflow_dispatch:
+    inputs:
+      libvpx-ref:
+        description: libvpx git ref to checkout
+        required: false
+        default: v1.6.0-720-g186dc40
+
+env:
+  LIBVPX_REF: ${{ inputs.libvpx-ref || 'v1.6.0-720-g186dc40' }}
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    name: macOS + iOS
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build deps
+        run: |
+          brew update
+          brew install yasm
+      - name: Fetch libvpx
+        run: git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 libvpx
+      - name: Build macOS libs
+        run: |
+          pushd libvpx
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_osx.sh" x86_64
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_osx.sh" arm64
+          pushd third_party/libwebm
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/webm/build_osx.sh" x86_64
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/webm/build_osx.sh" arm64
+          popd
+          popd
+      - name: Build iOS libs
+        env:
+          MIN_IOS_VERSION: "12.0"
+        run: |
+          pushd libvpx
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_ios.sh" arm64
+          pushd third_party/libwebm
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/webm/build_ios.sh" arm64
+          popd
+          popd
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx,arm64-ios}
+          cp libvpx/build-x86_64-osx/libvpx.a artifacts/videoplayer/lib/x86_64-osx/
+          cp libvpx/build-arm64-osx/libvpx.a artifacts/videoplayer/lib/arm64-osx/
+          cp libvpx/third_party/libwebm/build/osx/x86_64/libwebm.a artifacts/videoplayer/lib/x86_64-osx/
+          cp libvpx/third_party/libwebm/build/osx/arm64/libwebm.a artifacts/videoplayer/lib/arm64-osx/
+          cp libvpx/build-arm64-ios/libvpx.a artifacts/videoplayer/lib/arm64-ios/
+          cp libvpx/third_party/libwebm/build/ios/arm64/libwebm.a artifacts/videoplayer/lib/arm64-ios/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-macos
+          path: artifacts
+
+  android:
+    name: Android
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        id: setup-ndk
+        uses: android-actions/setup-ndk@v3
+        with:
+          ndk-version: 25.2.9519653
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y build-essential yasm
+      - name: Fetch libvpx
+        run: git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 libvpx
+      - name: Build Android libs
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$ANDROID_SDK_ROOT/ndk/25.2.9519653}"
+          pushd libvpx
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_android.sh"
+          TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
+          SYSROOT="$TOOLCHAIN/sysroot"
+          CXX="$TOOLCHAIN/bin/armv7a-linux-androideabi21-clang++"
+          AR="$TOOLCHAIN/bin/llvm-ar"
+          pushd third_party/libwebm
+          OUTDIR="build/android/armv7"
+          mkdir -p "${OUTDIR}"
+          pushd "${OUTDIR}"
+          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
+            ${CXX} -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+              --target=armv7a-linux-androideabi21 \
+              --sysroot="${SYSROOT}" \
+              -fPIC \
+              -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
+              -Wno-extern-c-compat \
+              -I../../.. || exit 1
+          done
+          ${AR} rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+          popd
+          popd
+          popd
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts/videoplayer/lib/armv7-android
+          cp libvpx/build-armv7-android/libvpx.a artifacts/videoplayer/lib/armv7-android/
+          cp libvpx/third_party/libwebm/build/android/armv7/libwebm.a artifacts/videoplayer/lib/armv7-android/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-android
+          path: artifacts
+
+  html5:
+    name: HTML5
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v13
+        with:
+          version: "3.1.45"
+      - name: Fetch libvpx
+        run: git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 libvpx
+      - name: Build HTML5 libs
+        run: |
+          source "$EMSDK/emsdk_env.sh"
+          pushd libvpx
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_html5.sh"
+          pushd third_party/libwebm
+          OUTDIR="build/html5"
+          mkdir -p "${OUTDIR}"
+          pushd "${OUTDIR}"
+          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
+            em++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+              -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
+              -Wno-extern-c-compat \
+              -s DISABLE_EXCEPTION_CATCHING=1 \
+              -fPIC \
+              -I../../.. || exit 1
+          done
+          emar rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+          popd
+          popd
+          popd
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts/videoplayer/lib/js-web
+          cp libvpx/build-js-web/libvpx.a artifacts/videoplayer/lib/js-web/
+          cp libvpx/third_party/libwebm/build/html5/libwebm.a artifacts/videoplayer/lib/js-web/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-js
+          path: artifacts
+
+  windows:
+    name: Windows
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            git
+            make
+            mingw-w64-x86_64-gcc
+            mingw-w64-i686-gcc
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-i686-pkg-config
+            yasm
+      - name: Fetch libvpx
+        run: git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 libvpx
+      - name: Build Windows libs
+        run: |
+          pushd libvpx
+          mkdir -p build-x86_64-win32
+          pushd build-x86_64-win32
+          CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-gcc-ar STRIP=x86_64-w64-mingw32-strip \
+          ../configure \
+            --target=x86_64-win64-gcc \
+            --disable-examples \
+            --disable-unit-tests \
+            --disable-docs \
+            --disable-tools \
+            --enable-pic || exit 1
+          make -j"$(nproc)"
+          popd
+          mkdir -p build-x86-win32
+          pushd build-x86-win32
+          CC=i686-w64-mingw32-gcc AR=i686-w64-mingw32-gcc-ar STRIP=i686-w64-mingw32-strip \
+          ../configure \
+            --target=x86-win32-gcc \
+            --disable-examples \
+            --disable-unit-tests \
+            --disable-docs \
+            --disable-tools \
+            --enable-pic || exit 1
+          make -j"$(nproc)"
+          popd
+          popd
+          pushd libvpx/third_party/libwebm
+          # x86_64
+          OUT64="build/win/x86_64"
+          mkdir -p "${OUT64}"
+          pushd "${OUT64}"
+          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
+            x86_64-w64-mingw32-g++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+              -static-libgcc -static-libstdc++ \
+              -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
+              -Wno-extern-c-compat \
+              -I../../.. || exit 1
+          done
+          x86_64-w64-mingw32-gcc-ar rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+          popd
+          # x86
+          OUT32="build/win/x86"
+          mkdir -p "${OUT32}"
+          pushd "${OUT32}"
+          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
+            i686-w64-mingw32-g++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+              -static-libgcc -static-libstdc++ \
+              -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
+              -Wno-extern-c-compat \
+              -I../../.. || exit 1
+          done
+          i686-w64-mingw32-gcc-ar rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+          popd
+          popd
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts/videoplayer/lib/x86_64-win32 artifacts/videoplayer/lib/x86-win32
+          cp libvpx/build-x86_64-win32/libvpx.a artifacts/videoplayer/lib/x86_64-win32/libvpx.a
+          cp libvpx/build-x86-win32/libvpx.a artifacts/videoplayer/lib/x86-win32/libvpx.a
+          cp libvpx/third_party/libwebm/build/win/x86_64/libwebm.a artifacts/videoplayer/lib/x86_64-win32/
+          cp libvpx/third_party/libwebm/build/win/x86/libwebm.a artifacts/videoplayer/lib/x86-win32/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libs-windows
+          path: artifacts
+
+  update-branch:
+    name: Update branch with binaries
+    runs-on: ubuntu-22.04
+    needs:
+      - macos
+      - android
+      - html5
+      - windows
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-artifacts
+      - name: Stage new binaries
+        run: |
+          shopt -s globstar
+          for archive in downloaded-artifacts/*; do
+            rsync -a "${archive}/videoplayer/lib/" videoplayer/lib/
+          done
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add videoplayer/lib
+          if git diff --cached --quiet; then
+            echo "No binary updates to commit."
+            exit 0
+          fi
+          git commit -m "videoplayer: update native libs"
+          git push origin "${TARGET_BRANCH}"

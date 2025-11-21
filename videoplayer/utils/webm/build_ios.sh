@@ -1,38 +1,43 @@
+#!/usr/bin/env bash
 
-# put this in libvpx/third_party/libwbm and cd there
+# Build libwebm for iOS. Run from libvpx/third_party/libwebm:
+#   bash path/to/videoplayer/utils/webm/build_ios.sh <arch>
+# Supported arches: arm64
 
-function terminate_usage {
-	echo "USAGE: ./build_ios.sh <arch>"
-	exit 1
+set -euo pipefail
+
+usage() {
+    echo "USAGE: ./build_ios.sh <arch>" >&2
+    echo "  arch: arm64" >&2
+    exit 1
 }
 
+ARCH="${1:-}" && [[ -n "${ARCH}" ]] || usage
 
-ARM_DARWIN_ROOT='/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer'
-IOS_SDK_VERSION="9.3"
+IOS_SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+MIN_IOS_VERSION="${MIN_IOS_VERSION:-12.0}"
 
-ARCH="${1:-}" && [ ! -z "${ARCH}" ] || terminate_usage
-
-if [ "$ARCH" == "arm64" ]
-then
-	CPP_FLAGS="-m64 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat -miphoneos-version-min=5.1"
-else
-	CPP_FLAGS="-m32 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat -miphoneos-version-min=5.1"
+if [[ "${ARCH}" != "arm64" ]]; then
+    echo "Unknown arch: ${ARCH}" >&2
+    usage
 fi
 
-CPP_FLAGS="$ARCH_FLAGS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat -mmacosx-version-min=10.7  -I../../.."
+ARCH_FLAGS="-arch ${ARCH}"
 
-OUTDIR=build/ios/$ARCH
+CPP_FLAGS="${ARCH_FLAGS} -fembed-bitcode -miphoneos-version-min=${MIN_IOS_VERSION} -isysroot ${IOS_SDK} -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -Wno-extern-c-compat -I../../.."
 
-mkdir -p $OUTDIR
-pushd $OUTDIR
+OUTDIR="build/ios/${ARCH}"
+
+mkdir -p "${OUTDIR}"
+pushd "${OUTDIR}" >/dev/null
 
 for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc
 do
-    clang++ -arch $ARCH -isysroot $ARM_DARWIN_ROOT/SDKs/iPhoneOS$IOS_SDK_VERSION.sdk -c ../$f -o $(basename $f).cpp_0.o $CPP_FLAGS -I../../
+    clang++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" ${CPP_FLAGS}
 done
 
 ar rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
 
 ls -la libwebm.a
 
-popd
+popd >/dev/null

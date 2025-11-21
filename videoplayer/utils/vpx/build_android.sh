@@ -1,17 +1,37 @@
 
+#!/usr/bin/env bash
+
 # https://groups.google.com/a/webmproject.org/forum/#!topic/webm-discuss/zpy_lgS6K-8
 
-ANDROID_SDK=$ANDROID_HOME/android-ndk-r10e
+set -euo pipefail
 
-set -e
+SDK_PATH="${ANDROID_NDK_HOME:-${ANDROID_SDK_PATH:-${ANDROID_HOME:-}}}"
+if [[ -z "${SDK_PATH}" ]]; then
+    echo "Set ANDROID_NDK_HOME or ANDROID_SDK_PATH to the Android NDK root" >&2
+    exit 1
+fi
 
-mkdir -p build-armv7-android
-pushd build-armv7-android
+BUILD_DIR="build-armv7-android"
 
-make clean
-#../configure --prefix=armv7-android --target=armv7-android-gcc --disable-runtime-cpu-detect --disable-neon --disable-neon-asm --disable-examples --sdk-path=/Users/mathiaswesterdahl/android/android-ndk-r12b
-CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=vfp" ../configure --prefix=armv7-android --target=armv7-android-gcc --disable-neon --disable-neon-asm --disable-examples --disable-unit-tests --disable-docs --disable-tools --sdk-path=$ANDROID_SDK
-make -j8
-#make install
+mkdir -p "${BUILD_DIR}"
+pushd "${BUILD_DIR}" >/dev/null
 
-popd
+if [[ -f Makefile ]]; then
+    make clean
+fi
+
+CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=vfp" \
+../configure \
+    --prefix=armv7-android \
+    --target=armv7-android-gcc \
+    --disable-neon \
+    --disable-neon-asm \
+    --disable-examples \
+    --disable-unit-tests \
+    --disable-docs \
+    --disable-tools \
+    --sdk-path="${SDK_PATH}"
+
+make -j"$(nproc)"
+
+popd >/dev/null

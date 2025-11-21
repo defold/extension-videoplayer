@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
 
-set -e
+BUILD_DIR="build-js-web"
 
-mkdir -p build-js-web
-pushd build-js-web
+mkdir -p "${BUILD_DIR}"
+pushd "${BUILD_DIR}" >/dev/null
 
-if [-e Makefile]
-then
-	make distclean
+if [[ -f Makefile ]]; then
+    make distclean
 fi
 
-ARFLAGS=crs $EMSCRIPTEN/emconfigure ../configure --prefix=js-web --disable-examples --disable-unit-tests --disable-docs --disable-tools
-make -j8
-#make install
+emconfigure ../configure \
+    --prefix=js-web \
+    --disable-examples \
+    --disable-unit-tests \
+    --disable-docs \
+    --disable-tools \
+    --enable-pic
 
-popd
+emmake make -j"$(nproc)"
 
+popd >/dev/null
 
 

@@ -8,3 +8,5 @@ build
 .cproject
 builtins
 .internal
+/AGENTS.md
+/.editor_settings
