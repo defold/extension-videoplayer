@@ -35,12 +35,17 @@ if [[ -f Makefile ]]; then
     make clean
 fi
 
-CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=vfp" \
+CC="${TOOLCHAIN}/bin/armv7a-linux-androideabi21-clang" \
+CXX="${TOOLCHAIN}/bin/armv7a-linux-androideabi21-clang++" \
+AR="${TOOLCHAIN}/bin/llvm-ar" \
+NM="${TOOLCHAIN}/bin/llvm-nm" \
+STRIP="${TOOLCHAIN}/bin/llvm-strip" \
+CFLAGS="--sysroot=${SYSROOT} -march=armv7-a -mfloat-abi=softfp -mfpu=vfp" \
 LDFLAGS="--sysroot=${SYSROOT}" \
 EXTRA_CFLAGS="--sysroot=${SYSROOT}" \
 ../configure \
     --prefix=armv7-android \
-    --target=armv7-android-clang \
+    --target=armv7-android-gcc \
     --disable-neon \
     --disable-neon-asm \
     --disable-examples \

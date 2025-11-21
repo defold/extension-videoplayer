@@ -221,8 +221,6 @@ jobs:
           CC=i686-w64-mingw32-gcc AR=i686-w64-mingw32-gcc-ar STRIP=i686-w64-mingw32-strip \
           ../configure \
             --target=x86-win32-gcc \
-            --extra-cflags="-m32" \
-            --extra-ldflags="-m32" \
             --disable-examples \
             --disable-unit-tests \
             --disable-docs \

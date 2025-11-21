@@ -26,7 +26,7 @@ fi
 TARGET_TRIPLE="arm64-darwin-gcc"
 
 BUILD_DIR="build-${ARCH}-ios"
-CLANG_FLAGS="-arch ${ARCH} -fembed-bitcode -miphoneos-version-min=${MIN_IOS_VERSION}"
+CLANG_FLAGS="-arch ${ARCH} -isysroot ${IOS_SDK} -fembed-bitcode -miphoneos-version-min=${MIN_IOS_VERSION}"
 
 mkdir -p "${BUILD_DIR}"
 pushd "${BUILD_DIR}" >/dev/null
@@ -39,7 +39,6 @@ CFLAGS="${CLANG_FLAGS}" \
 LDFLAGS="${CLANG_FLAGS}" \
 ../configure \
     --target="${TARGET_TRIPLE}" \
-    --sdk-path="${IOS_SDK}" \
     --enable-pic \
     --disable-examples \
     --disable-unit-tests \

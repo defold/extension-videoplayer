@@ -14,7 +14,6 @@ fi
 emconfigure ../configure \
     --prefix=js-web \
     --target=generic-gnu \
-    --disable-asm \
     --disable-runtime-cpu-detect \
     --disable-examples \
     --disable-unit-tests \
@@ -25,4 +24,3 @@ emconfigure ../configure \
 emmake make -j"$(nproc)"
 
 popd >/dev/null
-
