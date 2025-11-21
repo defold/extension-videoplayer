@@ -21,6 +21,6 @@ emconfigure ../configure \
     --disable-tools \
     --enable-pic
 
-emmake make -j"$(nproc)"
+STRIP=true emmake make -j"$(nproc)"
 
 popd >/dev/null

@@ -155,8 +155,8 @@ jobs:
           OUTDIR="build/html5"
           mkdir -p "${OUTDIR}"
           pushd "${OUTDIR}"
-          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
-            em++ -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+          for f in ../common/file_util.cc ../common/hdr_util.cc ../mkvparser/mkvparser.cc ../mkvparser/mkvreader.cc ../mkvmuxer/mkvmuxer.cc ../mkvmuxer/mkvmuxerutil.cc ../mkvmuxer/mkvwriter.cc; do
+            em++ -c "${f}" -o "$(basename "${f}").cpp_0.o" \
               -std=c++11 \
               -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
               -Wno-extern-c-compat \
@@ -195,6 +195,7 @@ jobs:
             make
             mingw-w64-x86_64-gcc
             mingw-w64-i686-gcc
+            mingw-w64-i686-gcc-objc
             mingw-w64-x86_64-pkg-config
             mingw-w64-i686-pkg-config
             yasm
@@ -218,6 +219,7 @@ jobs:
           popd
           mkdir -p build-x86-win32
           pushd build-x86-win32
+          export PKG_CONFIG_PATH=/mingw32/lib/pkgconfig
           CC=i686-w64-mingw32-gcc AR=i686-w64-mingw32-gcc-ar STRIP=i686-w64-mingw32-strip \
           ../configure \
             --target=x86-win32-gcc \
