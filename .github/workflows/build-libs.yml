@@ -98,10 +98,6 @@ jobs:
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/include/webm
-          rsync -a libvpx/include/ artifacts/videoplayer/include/
-          cp libvpx/vpx_config.h artifacts/videoplayer/include/
-          rsync -a libvpx/third_party/libwebm/*.h artifacts/videoplayer/include/webm/ || true
           mkdir -p artifacts/videoplayer/lib/arm64-ios
           cp libvpx/build-arm64-ios/libvpx.a artifacts/videoplayer/lib/arm64-ios/
           cp libvpx/third_party/libwebm/build/ios/arm64/libwebm.a artifacts/videoplayer/lib/arm64-ios/
@@ -156,10 +152,6 @@ jobs:
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/include/webm
-          rsync -a libvpx/include/ artifacts/videoplayer/include/
-          cp libvpx/vpx_config.h artifacts/videoplayer/include/
-          rsync -a libvpx/third_party/libwebm/*.h artifacts/videoplayer/include/webm/ || true
           mkdir -p artifacts/videoplayer/lib/armv7-android
           cp libvpx/build-armv7-android/libvpx.a artifacts/videoplayer/lib/armv7-android/
           cp libvpx/third_party/libwebm/build/android/armv7/libwebm.a artifacts/videoplayer/lib/armv7-android/
@@ -206,10 +198,6 @@ jobs:
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/include/webm
-          rsync -a libvpx/include/ artifacts/videoplayer/include/
-          cp libvpx/vpx_config.h artifacts/videoplayer/include/
-          rsync -a libvpx/third_party/libwebm/*.h artifacts/videoplayer/include/webm/ || true
           mkdir -p artifacts/videoplayer/lib/js-web
           cp libvpx/build-js-web/libvpx.a artifacts/videoplayer/lib/js-web/
           cp libvpx/third_party/libwebm/build/html5/libwebm.a artifacts/videoplayer/lib/js-web/
@@ -304,10 +292,6 @@ jobs:
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/include/webm
-          rsync -a libvpx/include/ artifacts/videoplayer/include/
-          cp libvpx/vpx_config.h artifacts/videoplayer/include/
-          rsync -a libvpx/third_party/libwebm/*.h artifacts/videoplayer/include/webm/ || true
           mkdir -p artifacts/videoplayer/lib/x86_64-win32 artifacts/videoplayer/lib/x86-win32
           cp libvpx/build-x86_64-win32/libvpx.a artifacts/videoplayer/lib/x86_64-win32/libvpx.a
           cp libvpx/build-x86-win32/libvpx.a artifacts/videoplayer/lib/x86-win32/libvpx.a
@@ -340,10 +324,12 @@ jobs:
       - name: Stage new binaries
         run: |
           shopt -s globstar nullglob
+          INCLUDE_DONE=false
           if compgen -G "downloaded-artifacts/*" > /dev/null; then
             for archive in downloaded-artifacts/*; do
-              if [[ -d "${archive}/videoplayer/include" ]]; then
+              if [[ "${INCLUDE_DONE}" == "false" && -d "${archive}/videoplayer/include" ]]; then
                 rsync -a "${archive}/videoplayer/include/" videoplayer/include/
+                INCLUDE_DONE=true
               fi
               rsync -a "${archive}/videoplayer/lib/" videoplayer/lib/
             done
