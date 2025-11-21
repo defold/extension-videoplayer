@@ -117,13 +117,9 @@ void rewind_and_reset(struct WebmInputContext *const webm_ctx,
 
 int file_is_webm(struct WebmInputContext *webm_ctx,
                  struct VpxInputContext *vpx_ctx) {
-  //mkvparser::MkvBufferReader* const reader = new mkvparser::MkvBufferReader(vpx_ctx->buffer, vpx_ctx->length);
   mkvparser::IMkvReader* reader;
-  /*if( vpx_ctx->file )
-    reader = new mkvparser::MkvReader(vpx_ctx->file);
-  else*/
-  if(vpx_ctx->buffer)
-    reader = new mkvparser::MkvBufferReader(vpx_ctx->buffer, vpx_ctx->length);
+  if(webm_ctx->input_buffer)
+    reader = new mkvparser::MkvBufferReader(webm_ctx->input_buffer, static_cast<long long>(webm_ctx->input_buffer_length));
   else {
     printf("%s %d: %s: unknown error\n", __FILE__, __LINE__, __FUNCTION__);
     return 0;

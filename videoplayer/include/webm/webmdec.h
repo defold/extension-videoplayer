@@ -30,6 +30,8 @@ struct WebmInputContext {
   int64_t timestamp_ns;
   int is_key_frame;
   int reached_eos;
+  uint8_t *input_buffer;
+  size_t input_buffer_length;
 };
 
 // Checks if the input is a WebM file. If so, initializes WebMInputContext so

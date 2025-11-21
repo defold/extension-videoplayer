@@ -61,8 +61,8 @@ static int Open(lua_State* L)
         dmBuffer::GetBytes(sourcebuffer->m_Buffer, (void**)&data, &datasize);
 
         movie->m_VpxCtx.length = datasize;
-        movie->m_WebmCtx.input_buffer_length = datasize;
         movie->m_WebmCtx.input_buffer = (uint8_t*)malloc(datasize);
+        movie->m_WebmCtx.input_buffer_length = datasize;
         memcpy(movie->m_WebmCtx.input_buffer, data, datasize);
     }
 
@@ -125,9 +125,10 @@ static int Close(lua_State* L)
     Movie* movie = (Movie*)(uintptr_t) luaL_checknumber(L, 1);
     assert(movie != 0);
 
-    free(movie->m_WebmCtx.input_buffer);
-
     webm_free(&movie->m_WebmCtx);
+    free(movie->m_WebmCtx.input_buffer);
+    movie->m_WebmCtx.input_buffer = 0;
+    movie->m_WebmCtx.input_buffer_length = 0;
     vpx_codec_destroy(&movie->m_Decoder);
 
     dmScript::Unref(L, LUA_REGISTRYINDEX, movie->m_VideoBufferLuaRef); // We want it destroyed by the GC
