@@ -415,6 +415,7 @@ jobs:
             echo "No vpx_config.h found; skipping header update."
             exit 0
           fi
+          find "${STAGED_INCLUDE}" -type f ! -name '*.h' -delete
           rsync -a --delete "${STAGED_INCLUDE}/" videoplayer/include/
           git add videoplayer/include
           if git diff --cached --quiet; then
