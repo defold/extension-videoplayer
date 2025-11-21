@@ -350,7 +350,40 @@ jobs:
       - name: Stage new binaries
         run: |
           shopt -s globstar nullglob
+          REQUIRED=(
+            "videoplayer/lib/armv7-android/libvpx.a"
+            "videoplayer/lib/armv7-android/libwebm.a"
+            "videoplayer/lib/arm64-android/libvpx.a"
+            "videoplayer/lib/arm64-android/libwebm.a"
+            "videoplayer/lib/arm64-ios/libvpx.a"
+            "videoplayer/lib/arm64-ios/libwebm.a"
+            "videoplayer/lib/arm64-osx/libvpx.a"
+            "videoplayer/lib/arm64-osx/libwebm.a"
+            "videoplayer/lib/x86_64-osx/libvpx.a"
+            "videoplayer/lib/x86_64-osx/libwebm.a"
+            "videoplayer/lib/x86-osx/libvpx.a"
+            "videoplayer/lib/x86-osx/libwebm.a"
+            "videoplayer/lib/js-web/libvpx.a"
+            "videoplayer/lib/js-web/libwebm.a"
+            "videoplayer/lib/wasm-web/libvpx.a"
+            "videoplayer/lib/wasm-web/libwebm.a"
+            "videoplayer/lib/x86_64-win32/libvpx.a"
+            "videoplayer/lib/x86_64-win32/libwebm.a"
+            "videoplayer/lib/x86-win32/libvpx.a"
+            "videoplayer/lib/x86-win32/libwebm.a"
+          )
           if compgen -G "downloaded-artifacts/*" > /dev/null; then
+            MISSING=()
+            for required in "${REQUIRED[@]}"; do
+              if ! find downloaded-artifacts -type f -path "*/${required}" -print -quit | grep -q .; then
+                MISSING+=("${required}")
+              fi
+            done
+            if [[ ${#MISSING[@]} -gt 0 ]]; then
+              echo "Missing artifacts:" >&2
+              printf ' - %s\n' "${MISSING[@]}" >&2
+              exit 1
+            fi
             for archive in downloaded-artifacts/*; do
               if [[ -d "${archive}/videoplayer/lib" ]]; then
                 rsync -a "${archive}/videoplayer/lib/" videoplayer/lib/
