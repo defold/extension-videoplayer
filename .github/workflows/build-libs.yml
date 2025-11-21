@@ -67,7 +67,10 @@ jobs:
           cp libvpx/third_party/libwebm/build/osx/arm64/libwebm.a artifacts/videoplayer/lib/arm64-osx/
           rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx/ artifacts/videoplayer/include/vpx/
           rsync -a --include '*/' --include '*.h' --exclude '*' libvpx/vpx_ports/ artifacts/videoplayer/include/vpx_ports/
-          if [[ -f libvpx/examples/webmdec.h ]]; then
+          if [[ -f libvpx/webmdec.h ]]; then
+            mkdir -p artifacts/videoplayer/include/webm
+            cp libvpx/webmdec.h artifacts/videoplayer/include/webm/webmdec.h
+          elif [[ -f libvpx/examples/webmdec.h ]]; then
             mkdir -p artifacts/videoplayer/include/webm
             cp libvpx/examples/webmdec.h artifacts/videoplayer/include/webm/webmdec.h
           fi
@@ -442,7 +445,10 @@ jobs:
             rsync -a "${TMP_ROOT}/libvpx/vpx_ports/" "${STAGED_INCLUDE}/vpx_ports/"
             STAGED_HAS_HEADERS=1
           fi
-          if [[ -f "${TMP_ROOT}/libvpx/examples/webmdec.h" && ! -f "${STAGED_INCLUDE}/webm/webmdec.h" ]]; then
+          if [[ -f "${TMP_ROOT}/libvpx/webmdec.h" && ! -f "${STAGED_INCLUDE}/webm/webmdec.h" ]]; then
+            mkdir -p "${STAGED_INCLUDE}/webm"
+            cp "${TMP_ROOT}/libvpx/webmdec.h" "${STAGED_INCLUDE}/webm/webmdec.h"
+          elif [[ -f "${TMP_ROOT}/libvpx/examples/webmdec.h" && ! -f "${STAGED_INCLUDE}/webm/webmdec.h" ]]; then
             mkdir -p "${STAGED_INCLUDE}/webm"
             cp "${TMP_ROOT}/libvpx/examples/webmdec.h" "${STAGED_INCLUDE}/webm/webmdec.h"
           fi
