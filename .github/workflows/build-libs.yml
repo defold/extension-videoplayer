@@ -7,6 +7,7 @@ on:
         description: libvpx git ref to checkout
         required: false
         default: v1.6.0-720-g186dc40
+  push:
 
 env:
   LIBVPX_REF: ${{ inputs.libvpx-ref || 'v1.6.0-720-g186dc40' }}
