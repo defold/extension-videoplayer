@@ -155,7 +155,7 @@ jobs:
           OUTDIR="build/html5"
           mkdir -p "${OUTDIR}"
           pushd "${OUTDIR}"
-          for f in ../common/file_util.cc ../common/hdr_util.cc ../mkvparser/mkvparser.cc ../mkvparser/mkvreader.cc ../mkvmuxer/mkvmuxer.cc ../mkvmuxer/mkvmuxerutil.cc ../mkvmuxer/mkvwriter.cc; do
+          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
             em++ -c "${f}" -o "$(basename "${f}").cpp_0.o" \
               -std=c++11 \
               -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
@@ -195,7 +195,6 @@ jobs:
             make
             mingw-w64-x86_64-gcc
             mingw-w64-i686-gcc
-            mingw-w64-i686-gcc-objc
             mingw-w64-x86_64-pkg-config
             mingw-w64-i686-pkg-config
             yasm

@@ -11,6 +11,8 @@ if [[ -f Makefile ]]; then
     make distclean
 fi
 
+export STRIP=echo
+
 emconfigure ../configure \
     --prefix=js-web \
     --target=generic-gnu \
@@ -21,6 +23,6 @@ emconfigure ../configure \
     --disable-tools \
     --enable-pic
 
-STRIP=true emmake make -j"$(nproc)"
+emmake make -j"$(nproc)"
 
 popd >/dev/null
