@@ -186,7 +186,7 @@ jobs:
               -Wno-extern-c-compat \
               -s DISABLE_EXCEPTION_CATCHING=1 \
               -fPIC \
-              -I../../.. || exit 1
+              -I../.. -I../../.. || exit 1
           done
           emar rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
           popd
@@ -243,6 +243,7 @@ jobs:
           popd
           mkdir -p build-x86-win32
           pushd build-x86-win32
+          export PATH="/mingw32/bin:$PATH"
           export PKG_CONFIG_PATH=/mingw32/lib/pkgconfig
           CC=i686-w64-mingw32-gcc AR=i686-w64-mingw32-gcc-ar STRIP=i686-w64-mingw32-strip \
           ../configure \
