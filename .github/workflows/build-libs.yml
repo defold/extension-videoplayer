@@ -325,14 +325,11 @@ jobs:
       - name: Stage new binaries
         run: |
           shopt -s globstar nullglob
-          INCLUDE_DONE=false
           if compgen -G "downloaded-artifacts/*" > /dev/null; then
             for archive in downloaded-artifacts/*; do
-              if [[ "${INCLUDE_DONE}" == "false" && -d "${archive}/videoplayer/include" ]]; then
-                rsync -a "${archive}/videoplayer/include/" videoplayer/include/
-                INCLUDE_DONE=true
+              if [[ -d "${archive}/videoplayer/lib" ]]; then
+                rsync -a "${archive}/videoplayer/lib/" videoplayer/lib/
               fi
-              rsync -a "${archive}/videoplayer/lib/" videoplayer/lib/
             done
           else
             echo "No artifacts to merge."
@@ -350,4 +347,29 @@ jobs:
             exit 0
           fi
           git commit -m "videoplayer: update native libs"
+          git push origin "${TARGET_BRANCH}"
+      - name: Update headers
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          shopt -s globstar nullglob
+          if compgen -G "downloaded-artifacts/*" > /dev/null; then
+            for archive in downloaded-artifacts/*; do
+              if [[ -d "${archive}/videoplayer/include" ]]; then
+                rsync -a "${archive}/videoplayer/include/" videoplayer/include/
+                break
+              fi
+            done
+          else
+            echo "No artifacts to merge."
+          fi
+          git add videoplayer/include
+          if git diff --cached --quiet; then
+            echo "No header updates to commit."
+            exit 0
+          fi
+          git commit -m "videoplayer: update headers"
           git push origin "${TARGET_BRANCH}"
