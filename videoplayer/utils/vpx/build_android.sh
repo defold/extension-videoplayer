@@ -5,6 +5,15 @@
 
 set -euo pipefail
 
+usage() {
+    echo "Usage: $0 <arch>" >&2
+    echo "  arch: armv7 | arm64" >&2
+    exit 1
+}
+
+ARCH="${1:-}"
+[[ -n "${ARCH}" ]] || usage
+
 SDK_PATH="${ANDROID_NDK_HOME:-${ANDROID_SDK_PATH:-${ANDROID_HOME:-}}}"
 if [[ -z "${SDK_PATH}" ]]; then
     echo "Set ANDROID_NDK_HOME or ANDROID_SDK_PATH to the Android NDK root" >&2
@@ -25,20 +34,27 @@ if [[ ! -d "${TOOLCHAIN}" ]]; then
 fi
 export PATH="${TOOLCHAIN}/bin:${PATH}"
 SYSROOT="${TOOLCHAIN}/sysroot"
-WRAPPER_DIR="$(pwd)/toolwrap"
-mkdir -p "${WRAPPER_DIR}"
-cat > "${WRAPPER_DIR}/arm-linux-androideabi-gcc" <<'EOF'
-#!/usr/bin/env bash
-exec armv7a-linux-androideabi21-clang "$@"
-EOF
-cat > "${WRAPPER_DIR}/arm-linux-androideabi-g++" <<'EOF'
-#!/usr/bin/env bash
-exec armv7a-linux-androideabi21-clang++ "$@"
-EOF
-chmod +x "${WRAPPER_DIR}/arm-linux-androideabi-gcc" "${WRAPPER_DIR}/arm-linux-androideabi-g++"
-export PATH="${WRAPPER_DIR}:${PATH}"
 
-BUILD_DIR="build-armv7-android"
+case "${ARCH}" in
+    armv7)
+        TARGET_TRIPLE="armv7a-linux-androideabi21"
+        CONFIG_TARGET="armv7-android-gcc"
+        CONFIG_PREFIX="armv7-android"
+        CFLAGS_ARCH="-march=armv7-a -mfloat-abi=softfp -mfpu=vfp -D__ANDROID_API__=21"
+        ;;
+    arm64)
+        TARGET_TRIPLE="aarch64-linux-android21"
+        CONFIG_TARGET="arm64-android-gcc"
+        CONFIG_PREFIX="arm64-android"
+        CFLAGS_ARCH="-march=armv8-a -D__ANDROID_API__=21"
+        ;;
+    *)
+        echo "Unknown arch: ${ARCH}" >&2
+        usage
+        ;;
+esac
+
+BUILD_DIR="build-${ARCH}-android"
 
 mkdir -p "${BUILD_DIR}"
 pushd "${BUILD_DIR}" >/dev/null
@@ -47,17 +63,17 @@ if [[ -f Makefile ]]; then
     make clean
 fi
 
-CC="${TOOLCHAIN}/bin/armv7a-linux-androideabi21-clang" \
-CXX="${TOOLCHAIN}/bin/armv7a-linux-androideabi21-clang++" \
+CC="${TOOLCHAIN}/bin/${TARGET_TRIPLE}-clang" \
+CXX="${TOOLCHAIN}/bin/${TARGET_TRIPLE}-clang++" \
 AR="${TOOLCHAIN}/bin/llvm-ar" \
 NM="${TOOLCHAIN}/bin/llvm-nm" \
 STRIP="${TOOLCHAIN}/bin/llvm-strip" \
-CFLAGS="--sysroot=${SYSROOT} --target=armv7a-linux-androideabi21 -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -D__ANDROID_API__=21" \
-LDFLAGS="--sysroot=${SYSROOT} --target=armv7a-linux-androideabi21" \
-EXTRA_CFLAGS="--sysroot=${SYSROOT} --target=armv7a-linux-androideabi21" \
+CFLAGS="--sysroot=${SYSROOT} --target=${TARGET_TRIPLE} ${CFLAGS_ARCH}" \
+LDFLAGS="--sysroot=${SYSROOT} --target=${TARGET_TRIPLE}" \
+EXTRA_CFLAGS="--sysroot=${SYSROOT} --target=${TARGET_TRIPLE}" \
 ../configure \
-    --prefix=armv7-android \
-    --target=armv7-android-gcc \
+    --prefix="${CONFIG_PREFIX}" \
+    --target="${CONFIG_TARGET}" \
     --disable-neon \
     --disable-neon-asm \
     --disable-examples \

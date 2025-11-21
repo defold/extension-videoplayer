@@ -127,34 +127,44 @@ jobs:
         run: |
           export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$ANDROID_SDK_ROOT/ndk/25.2.9519653}"
           pushd libvpx
-          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_android.sh"
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_android.sh" armv7
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_android.sh" arm64
           TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
           SYSROOT="$TOOLCHAIN/sysroot"
-          CXX="$TOOLCHAIN/bin/armv7a-linux-androideabi21-clang++"
-          AR="$TOOLCHAIN/bin/llvm-ar"
+          build_webm() {
+            local arch="$1"
+            local target="$2"
+            local outdir="$3"
+            local cxx="$TOOLCHAIN/bin/${target}-clang++"
+            local ar="$TOOLCHAIN/bin/llvm-ar"
+            mkdir -p "${outdir}"
+            pushd "${outdir}"
+            for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
+              ${cxx} -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
+                --target="${target}" \
+                --sysroot="${SYSROOT}" \
+                -std=c++11 \
+                -fPIC \
+                -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
+                -Wno-extern-c-compat \
+                -I../../.. || exit 1
+            done
+            ${ar} rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+            popd
+          }
           pushd third_party/libwebm
-          OUTDIR="build/android/armv7"
-          mkdir -p "${OUTDIR}"
-          pushd "${OUTDIR}"
-          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
-            ${CXX} -c "../${f}" -o "$(basename "${f}").cpp_0.o" \
-              --target=armv7a-linux-androideabi21 \
-              --sysroot="${SYSROOT}" \
-              -std=c++11 \
-              -fPIC \
-              -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
-              -Wno-extern-c-compat \
-              -I../../.. || exit 1
-          done
-          ${AR} rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+          build_webm armv7 armv7a-linux-androideabi21 build/android/armv7
+          build_webm arm64 aarch64-linux-android21 build/android/arm64
           popd
           popd
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/lib/armv7-android
+          mkdir -p artifacts/videoplayer/lib/armv7-android artifacts/videoplayer/lib/arm64-android
           cp libvpx/build-armv7-android/libvpx.a artifacts/videoplayer/lib/armv7-android/
+          cp libvpx/build-arm64-android/libvpx.a artifacts/videoplayer/lib/arm64-android/
           cp libvpx/third_party/libwebm/build/android/armv7/libwebm.a artifacts/videoplayer/lib/armv7-android/
+          cp libvpx/third_party/libwebm/build/android/arm64/libwebm.a artifacts/videoplayer/lib/arm64-android/
       - uses: actions/upload-artifact@v4
         with:
           name: libs-android
@@ -178,30 +188,39 @@ jobs:
         run: |
           source "$EMSDK/emsdk_env.sh"
           pushd libvpx
-          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_html5.sh"
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_html5.sh" js
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_html5.sh" wasm
           pushd third_party/libwebm
-          OUTDIR="build/html5"
-          mkdir -p "${OUTDIR}"
-          pushd "${OUTDIR}"
-          for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
-            em++ -c "${f}" -o "$(basename "${f}").cpp_0.o" \
-              -std=c++11 \
-              -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
-              -Wno-extern-c-compat \
-              -s DISABLE_EXCEPTION_CATCHING=1 \
-              -s WASM=0 \
-              -fPIC \
-              -I../.. -I../../.. || exit 1
-          done
-          emar rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+          build_webm() {
+            local wasm="$1"
+            local outdir="$2"
+            mkdir -p "${outdir}"
+            pushd "${outdir}"
+            for f in ../../common/file_util.cc ../../common/hdr_util.cc ../../mkvparser/mkvparser.cc ../../mkvparser/mkvreader.cc ../../mkvmuxer/mkvmuxer.cc ../../mkvmuxer/mkvmuxerutil.cc ../../mkvmuxer/mkvwriter.cc; do
+              em++ -c "${f}" -o "$(basename "${f}").cpp_0.o" \
+                -std=c++11 \
+                -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
+                -Wno-extern-c-compat \
+                -s DISABLE_EXCEPTION_CATCHING=1 \
+                -s WASM="${wasm}" \
+                -fPIC \
+                -I../.. -I../../.. || exit 1
+            done
+            emar rcs libwebm.a file_util.cc.cpp_0.o hdr_util.cc.cpp_0.o mkvparser.cc.cpp_0.o mkvreader.cc.cpp_0.o mkvmuxer.cc.cpp_0.o mkvmuxerutil.cc.cpp_0.o mkvwriter.cc.cpp_0.o
+            popd
+          }
+          build_webm 0 build/html5
+          build_webm 1 build/html5-wasm
           popd
           popd
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/lib/js-web
+          mkdir -p artifacts/videoplayer/lib/js-web artifacts/videoplayer/lib/wasm-web
           cp libvpx/build-js-web/libvpx.a artifacts/videoplayer/lib/js-web/
           cp libvpx/third_party/libwebm/build/html5/libwebm.a artifacts/videoplayer/lib/js-web/
+          cp libvpx/build-wasm-web/libvpx.a artifacts/videoplayer/lib/wasm-web/
+          cp libvpx/third_party/libwebm/build/html5-wasm/libwebm.a artifacts/videoplayer/lib/wasm-web/
       - uses: actions/upload-artifact@v4
         with:
           name: libs-js
