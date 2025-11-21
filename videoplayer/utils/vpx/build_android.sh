@@ -25,6 +25,18 @@ if [[ ! -d "${TOOLCHAIN}" ]]; then
 fi
 export PATH="${TOOLCHAIN}/bin:${PATH}"
 SYSROOT="${TOOLCHAIN}/sysroot"
+WRAPPER_DIR="$(pwd)/toolwrap"
+mkdir -p "${WRAPPER_DIR}"
+cat > "${WRAPPER_DIR}/arm-linux-androideabi-gcc" <<'EOF'
+#!/usr/bin/env bash
+exec armv7a-linux-androideabi21-clang "$@"
+EOF
+cat > "${WRAPPER_DIR}/arm-linux-androideabi-g++" <<'EOF'
+#!/usr/bin/env bash
+exec armv7a-linux-androideabi21-clang++ "$@"
+EOF
+chmod +x "${WRAPPER_DIR}/arm-linux-androideabi-gcc" "${WRAPPER_DIR}/arm-linux-androideabi-g++"
+export PATH="${WRAPPER_DIR}:${PATH}"
 
 BUILD_DIR="build-armv7-android"
 
@@ -40,9 +52,9 @@ CXX="${TOOLCHAIN}/bin/armv7a-linux-androideabi21-clang++" \
 AR="${TOOLCHAIN}/bin/llvm-ar" \
 NM="${TOOLCHAIN}/bin/llvm-nm" \
 STRIP="${TOOLCHAIN}/bin/llvm-strip" \
-CFLAGS="--sysroot=${SYSROOT} -march=armv7-a -mfloat-abi=softfp -mfpu=vfp" \
-LDFLAGS="--sysroot=${SYSROOT}" \
-EXTRA_CFLAGS="--sysroot=${SYSROOT}" \
+CFLAGS="--sysroot=${SYSROOT} --target=armv7a-linux-androideabi21 -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -D__ANDROID_API__=21" \
+LDFLAGS="--sysroot=${SYSROOT} --target=armv7a-linux-androideabi21" \
+EXTRA_CFLAGS="--sysroot=${SYSROOT} --target=armv7a-linux-androideabi21" \
 ../configure \
     --prefix=armv7-android \
     --target=armv7-android-gcc \

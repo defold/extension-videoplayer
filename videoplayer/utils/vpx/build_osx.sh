@@ -23,6 +23,10 @@ case "${ARCH}" in
         TARGET_TRIPLE="x86_64-darwin20-gcc"
         MACOSX_VERSION="-mmacosx-version-min=10.13"
         ;;
+    x86)
+        TARGET_TRIPLE="x86-darwin20-gcc"
+        MACOSX_VERSION="-mmacosx-version-min=10.7"
+        ;;
     arm64)
         TARGET_TRIPLE="arm64-darwin21-gcc"
         MACOSX_VERSION="-mmacosx-version-min=11.0"
@@ -33,6 +37,7 @@ case "${ARCH}" in
         ;;
 esac
 
+CFLAGS_ARCH="-arch ${ARCH} ${MACOSX_VERSION}"
 BUILD_DIR="build-${ARCH}-osx"
 
 mkdir -p "${BUILD_DIR}"
@@ -42,8 +47,8 @@ if [[ -f Makefile ]]; then
     make clean
 fi
 
-CFLAGS="-arch ${ARCH} ${MACOSX_VERSION}" \
-LDFLAGS="-arch ${ARCH} ${MACOSX_VERSION}" \
+CFLAGS="${CFLAGS_ARCH}" \
+LDFLAGS="${CFLAGS_ARCH}" \
 ../configure \
     --target="${TARGET_TRIPLE}" \
     --enable-pic \

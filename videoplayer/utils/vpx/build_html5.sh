@@ -11,6 +11,10 @@ if [[ -f Makefile ]]; then
     make distclean
 fi
 
+export EMCC_CFLAGS="-s WASM=0"
+export EMXX_CFLAGS="-s WASM=0"
+export EMCC_CXXFLAGS="-s WASM=0"
+export LDFLAGS="-s WASM=0"
 export STRIP=echo
 
 emconfigure ../configure \

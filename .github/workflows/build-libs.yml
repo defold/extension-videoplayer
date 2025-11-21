@@ -53,18 +53,26 @@ jobs:
           pushd libvpx
           bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_osx.sh" x86_64
           bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_osx.sh" arm64
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/vpx/build_osx.sh" x86 || true
           pushd third_party/libwebm
           bash "$GITHUB_WORKSPACE/videoplayer/utils/webm/build_osx.sh" x86_64
           bash "$GITHUB_WORKSPACE/videoplayer/utils/webm/build_osx.sh" arm64
+          bash "$GITHUB_WORKSPACE/videoplayer/utils/webm/build_osx.sh" i386 || true
           popd
           popd
       - name: Collect artifacts
         run: |
-          mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx}
+          mkdir -p artifacts/videoplayer/include/webm
+          rsync -a libvpx/include/ artifacts/videoplayer/include/
+          cp libvpx/vpx_config.h artifacts/videoplayer/include/
+          rsync -a libvpx/third_party/libwebm/*.h artifacts/videoplayer/include/webm/ || true
+          mkdir -p artifacts/videoplayer/lib/{x86_64-osx,arm64-osx,x86-osx}
           cp libvpx/build-x86_64-osx/libvpx.a artifacts/videoplayer/lib/x86_64-osx/
           cp libvpx/build-arm64-osx/libvpx.a artifacts/videoplayer/lib/arm64-osx/
+          if [[ -f libvpx/build-x86-osx/libvpx.a ]]; then cp libvpx/build-x86-osx/libvpx.a artifacts/videoplayer/lib/x86-osx/; fi
           cp libvpx/third_party/libwebm/build/osx/x86_64/libwebm.a artifacts/videoplayer/lib/x86_64-osx/
           cp libvpx/third_party/libwebm/build/osx/arm64/libwebm.a artifacts/videoplayer/lib/arm64-osx/
+          if [[ -f libvpx/third_party/libwebm/build/osx/i386/libwebm.a ]]; then cp libvpx/third_party/libwebm/build/osx/i386/libwebm.a artifacts/videoplayer/lib/x86-osx/; fi
       - uses: actions/upload-artifact@v4
         with:
           name: libs-macos
@@ -185,6 +193,7 @@ jobs:
               -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS \
               -Wno-extern-c-compat \
               -s DISABLE_EXCEPTION_CATCHING=1 \
+              -s WASM=0 \
               -fPIC \
               -I../.. -I../../.. || exit 1
           done
