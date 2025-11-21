@@ -355,17 +355,31 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          shopt -s globstar nullglob
-          if compgen -G "downloaded-artifacts/*" > /dev/null; then
-            for archive in downloaded-artifacts/*; do
-              if [[ -d "${archive}/videoplayer/include" ]]; then
-                rsync -a "${archive}/videoplayer/include/" videoplayer/include/
-                break
-              fi
-            done
-          else
-            echo "No artifacts to merge."
+          set -euo pipefail
+          TMP_ROOT="$(mktemp -d)"
+          git clone https://chromium.googlesource.com/webm/libvpx.git --branch "${LIBVPX_REF}" --depth 1 "${TMP_ROOT}/libvpx"
+          STAGED_INCLUDE="${TMP_ROOT}/staged-include"
+          mkdir -p "${STAGED_INCLUDE}"
+          rsync -a "${TMP_ROOT}/libvpx/include/" "${STAGED_INCLUDE}/"
+          if [[ -f "${TMP_ROOT}/libvpx/examples/webmdec.h" ]]; then
+            mkdir -p "${STAGED_INCLUDE}/webm"
+            cp "${TMP_ROOT}/libvpx/examples/webmdec.h" "${STAGED_INCLUDE}/webm/webmdec.h"
           fi
+          ARTIFACT_CONFIG=""
+          if [[ -d "downloaded-artifacts" ]]; then
+            ARTIFACT_CONFIG=$(find downloaded-artifacts -type f -path "*/videoplayer/include/vpx_config.h" -print -quit)
+          fi
+          if [[ -n "${ARTIFACT_CONFIG}" ]]; then
+            cp "${ARTIFACT_CONFIG}" "${STAGED_INCLUDE}/vpx_config.h"
+          elif find "${TMP_ROOT}/libvpx" -maxdepth 1 -name "vpx_config.h" | grep -q .; then
+            cp "${TMP_ROOT}/libvpx"/vpx_config.h "${STAGED_INCLUDE}/vpx_config.h"
+          elif [[ -f "videoplayer/include/vpx_config.h" ]]; then
+            cp "videoplayer/include/vpx_config.h" "${STAGED_INCLUDE}/vpx_config.h"
+          else
+            echo "No vpx_config.h found; leaving headers unchanged."
+            exit 0
+          fi
+          rsync -a --delete "${STAGED_INCLUDE}/" videoplayer/include/
           git add videoplayer/include
           if git diff --cached --quiet; then
             echo "No header updates to commit."
