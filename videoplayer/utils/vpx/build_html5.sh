@@ -15,11 +15,13 @@ case "${MODE}" in
         WASM_FLAG=0
         BUILD_DIR="build-js-web"
         PREFIX="js-web"
+        SUPPORT_LONGJMP=0
         ;;
     wasm)
         WASM_FLAG=1
         BUILD_DIR="build-wasm-web"
         PREFIX="wasm-web"
+        SUPPORT_LONGJMP=1
         ;;
     *)
         echo "Unknown mode: ${MODE}" >&2
@@ -34,10 +36,15 @@ if [[ -f Makefile ]]; then
     make distclean
 fi
 
-export EMCC_CFLAGS="-s WASM=${WASM_FLAG}"
-export EMXX_CFLAGS="-s WASM=${WASM_FLAG}"
-export EMCC_CXXFLAGS="-s WASM=${WASM_FLAG}"
-export LDFLAGS="-s WASM=${WASM_FLAG}"
+EXTRA_FLAGS=""
+if [[ "${SUPPORT_LONGJMP}" == "1" ]]; then
+    EXTRA_FLAGS="-s SUPPORT_LONGJMP=1"
+fi
+
+export EMCC_CFLAGS="-s WASM=${WASM_FLAG} ${EXTRA_FLAGS}"
+export EMXX_CFLAGS="-s WASM=${WASM_FLAG} ${EXTRA_FLAGS}"
+export EMCC_CXXFLAGS="-s WASM=${WASM_FLAG} ${EXTRA_FLAGS}"
+export LDFLAGS="-s WASM=${WASM_FLAG} ${EXTRA_FLAGS}"
 export STRIP=echo
 
 emconfigure ../configure \

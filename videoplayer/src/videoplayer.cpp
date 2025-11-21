@@ -9,7 +9,9 @@
 #define MODULE_NAME "videoplayer"
 
 // Defold SDK
+#ifndef DLIB_LOG_DOMAIN
 #define DLIB_LOG_DOMAIN LIB_NAME
+#endif
 #include <dmsdk/sdk.h>
 
 // libvpx + libwebm
@@ -59,8 +61,9 @@ static int Open(lua_State* L)
         dmBuffer::GetBytes(sourcebuffer->m_Buffer, (void**)&data, &datasize);
 
         movie->m_VpxCtx.length = datasize;
-        movie->m_VpxCtx.buffer = (uint8_t*)malloc(datasize);
-        memcpy(movie->m_VpxCtx.buffer, data, datasize);
+        movie->m_WebmCtx.input_buffer_length = datasize;
+        movie->m_WebmCtx.input_buffer = (uint8_t*)malloc(datasize);
+        memcpy(movie->m_WebmCtx.input_buffer, data, datasize);
     }
 
     if( !file_is_webm(&movie->m_WebmCtx, &movie->m_VpxCtx) )
@@ -122,7 +125,7 @@ static int Close(lua_State* L)
     Movie* movie = (Movie*)(uintptr_t) luaL_checknumber(L, 1);
     assert(movie != 0);
 
-    free(movie->m_VpxCtx.buffer);
+    free(movie->m_WebmCtx.input_buffer);
 
     webm_free(&movie->m_WebmCtx);
     vpx_codec_destroy(&movie->m_Decoder);
