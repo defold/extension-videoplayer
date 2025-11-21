@@ -6,11 +6,11 @@ on:
       libvpx-ref:
         description: libvpx git ref to checkout
         required: false
-        default: v1.6.0-720-g186dc40
+        default: v1.15.2
   push:
 
 env:
-  LIBVPX_REF: ${{ inputs.libvpx-ref || 'v1.6.0-720-g186dc40' }}
+  LIBVPX_REF: ${{ inputs.libvpx-ref || 'v1.15.2' }}
 
 permissions:
   contents: write
