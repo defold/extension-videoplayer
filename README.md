@@ -67,8 +67,8 @@ Updates the video with a delta time
 
     function init(self)
         local logosize = 128
-        local screen_width = sys.get_config("display.width", 600)
-        local screen_height = sys.get_config("display.height", 800)
+        local screen_width = sys.get_config_int("display.width", 600)
+        local screen_height = sys.get_config_int("display.height", 800)
         local scale_width = screen_width / logosize
         local scale_height = screen_height / logosize
 
@@ -78,7 +78,7 @@ Updates the video with a delta time
             local videoresource = resource.load("/videos/big_buck_bunny.webm")
             self.video = videoplayer.open(videoresource)
             self.videoinfo = videoplayer.get_info(self.video)
-            self.videoheader = { width=self.videoinfo.width, height=self.videoinfo.height, type=resource.TEXTURE_TYPE_2D, format=resource.TEXTURE_FORMAT_RGB, num_mip_maps=1 }
+            self.videoheader = { width=self.videoinfo.width, height=self.videoinfo.height, type=graphics.TEXTURE_TYPE_2D, format=graphics.TEXTURE_FORMAT_RGB, num_mip_maps=1 }
             self.videoframe = videoplayer.get_frame(self.video)
         else
             print("Could not initialize videoplayer")
@@ -92,4 +92,3 @@ Updates the video with a delta time
             resource.set_texture(path, self.videoheader, self.videoframe)
         end
     end
-

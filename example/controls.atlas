@@ -22,6 +22,4 @@ images {
 images {
   image: "/example/images/black1px.png"
 }
-margin: 0
 extrude_borders: 1
-inner_padding: 0
